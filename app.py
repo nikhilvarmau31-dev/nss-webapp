@@ -395,6 +395,16 @@ audit_logs = [
     }
 ]
 
+import db
+
+# Synchronize with Supabase backend if connected
+volunteers = db.fetch_volunteers(volunteers)
+faculty_members = db.fetch_faculty(faculty_members)
+events = db.fetch_events(events)
+attendance_records = db.fetch_attendance(attendance_records)
+news_items = db.fetch_news(news_items)
+audit_logs = db.fetch_audit_logs(audit_logs)
+
 # ─── Helper ───────────────────────────────────────────────────────────────────
 
 def get_next_id(collection):
@@ -436,6 +446,7 @@ def log_faculty_action(faculty_name, faculty_id, action_type, description, targe
         'badge_class': badge_map.get(action_type, 'badge-attendance')
     }
     audit_logs.insert(0, log_entry)
+    db.insert_audit_log(log_entry)
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
@@ -504,6 +515,7 @@ def register():
             'status': 'active'
         }
         volunteers.append(volunteer)
+        db.insert_volunteer(volunteer)
         session['student'] = volunteer['roll_no']
         session['student_name'] = volunteer['name']
         session['user_email'] = volunteer['email']
@@ -552,6 +564,7 @@ def add_event():
             'registered_volunteers': []
         }
         events.append(event)
+        db.insert_event(event)
         f_name = session.get('faculty_name', 'Dr. S. Rao' if session.get('faculty') else 'Admin Officer')
         f_id = session.get('faculty_id', 'FAC001' if session.get('faculty') else 'ADMIN01')
         log_faculty_action(f_name, f_id, 'Added Event',
@@ -588,6 +601,18 @@ def edit_event(event_id):
         except (ValueError, TypeError):
             pass
 
+        db.update_event_record(event_id, {
+            'title': event['title'],
+            'category': event['category'],
+            'date': event['date'],
+            'time': event['time'],
+            'venue': event['venue'],
+            'description': event['description'],
+            'hours': event['hours'],
+            'status': event['status'],
+            'max_volunteers': event['max_volunteers']
+        })
+
         f_name = session.get('faculty_name', 'Dr. S. Rao' if session.get('faculty') else 'Admin Officer')
         f_id = session.get('faculty_id', 'FAC001' if session.get('faculty') else 'ADMIN01')
         log_faculty_action(f_name, f_id, 'Updated Drive',
@@ -611,6 +636,7 @@ def delete_event(event_id):
     if event:
         title = event['title']
         events[:] = [e for e in events if e['id'] != event_id]
+        db.delete_event_record(event_id)
         f_name = session.get('faculty_name', 'Dr. S. Rao' if session.get('faculty') else 'Admin Officer')
         f_id = session.get('faculty_id', 'FAC001' if session.get('faculty') else 'ADMIN01')
         log_faculty_action(f_name, f_id, 'Deleted Drive',
@@ -648,6 +674,7 @@ def register_for_event(event_id):
         flash('Event is full.', 'danger')
     else:
         event['registered_volunteers'].append(roll_no)
+        db.update_event_record(event_id, {'registered_volunteers': event['registered_volunteers']})
         flash('Successfully registered for the event!', 'success')
     return redirect(url_for('event_detail', event_id=event_id))
 
@@ -678,11 +705,13 @@ def attendance():
                 'hours': credit_hours
             }
             attendance_records.append(record)
+            db.save_attendance(record)
             # update volunteer hours
             for roll in present_rolls:
                 vol = next((v for v in volunteers if v['roll_no'] == roll), None)
                 if vol:
                     vol['hours_completed'] = vol.get('hours_completed', 0) + credit_hours
+                    db.update_volunteer_record(vol['roll_no'], {'hours': vol['hours_completed']})
             
             f_name = session.get('faculty_name', 'Dr. S. Rao' if session.get('faculty') else 'Admin Officer')
             f_id = session.get('faculty_id', 'FAC001' if session.get('faculty') else 'ADMIN01')
@@ -812,6 +841,7 @@ def add_news():
             'category': category
         }
         news_items.insert(0, item)
+        db.insert_news(item)
         f_name = session.get('faculty_name', 'Dr. S. Rao' if session.get('faculty') else 'Admin Officer')
         f_id = session.get('faculty_id', 'FAC001' if session.get('faculty') else 'ADMIN01')
         log_faculty_action(f_name, f_id, 'Published Circular',
@@ -859,6 +889,7 @@ def delete_news(news_id):
     if item:
         title = item['title']
         news_items[:] = [n for n in news_items if n['id'] != news_id]
+        db.delete_news_record(news_id)
         f_name = session.get('faculty_name', 'Dr. S. Rao' if session.get('faculty') else 'Admin Officer')
         f_id = session.get('faculty_id', 'FAC001' if session.get('faculty') else 'ADMIN01')
         log_faculty_action(f_name, f_id, 'Deleted Circular',
@@ -976,6 +1007,7 @@ def login():
                     'role': pending.get('role', 'NSS Faculty Coordinator')
                 }
                 faculty_members.append(new_fac)
+                db.insert_faculty(new_fac)
 
                 # Log faculty in immediately
                 session['faculty'] = True
@@ -1053,6 +1085,7 @@ def login():
                 'status': 'active'
             }
             volunteers.append(vol)
+            db.insert_volunteer(vol)
             session['student'] = vol['roll_no']
             session['student_name'] = vol['name']
             session['user_email'] = vol['email']
@@ -1117,6 +1150,7 @@ def change_password():
             flash('Current faculty password is incorrect.', 'danger')
             return redirect(url_for('faculty_dashboard'))
         fac['password'] = new_pass
+        db.update_faculty_record(fac['faculty_id'], {'password': new_pass})
         flash(f'Password updated successfully for {fac["name"]}!', 'success')
         return redirect(url_for('faculty_dashboard'))
 
@@ -1132,6 +1166,7 @@ def change_password():
             flash('Current password is incorrect.', 'danger')
             return redirect(url_for('student_dashboard'))
         vol['password'] = new_pass
+        db.update_volunteer_record(vol['roll_no'], {'password': new_pass})
         flash('Your student account password has been updated successfully!', 'success')
         return redirect(url_for('student_dashboard'))
 
