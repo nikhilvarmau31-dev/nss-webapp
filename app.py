@@ -441,6 +441,7 @@ def log_faculty_action(faculty_name, faculty_id, action_type, description, targe
 # ─── Routes ───────────────────────────────────────────────────────────────────
 
 @app.route('/')
+@app.route('/api/index')
 def home():
     upcoming_events = sorted(
         [e for e in events if e['status'] == 'upcoming'],
