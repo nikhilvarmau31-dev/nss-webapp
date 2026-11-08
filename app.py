@@ -16,6 +16,8 @@ app.config['SESSION_COOKIE_SECURE'] = False
 
 @app.before_request
 def make_session_permanent():
+    import sys
+    print(f"FLASK BEFORE_REQUEST: path='{request.path}' full_path='{request.full_path}' url='{request.url}'", file=sys.stderr)
     session.permanent = True
 
 # Custom Jinja2 filter: convert month number to short name

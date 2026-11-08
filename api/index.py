@@ -12,8 +12,10 @@ class VercelWSGIMiddleware:
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
+        import sys
         path_info = environ.get('PATH_INFO', '')
         query_string = environ.get('QUERY_STRING', '')
+        print(f"ENV_DEBUG_RAW: PATH_INFO='{path_info}' QUERY_STRING='{query_string}'", file=sys.stderr)
 
         # In Vercel serverless runtime, query string might be baked into PATH_INFO
         if '?' in path_info:
@@ -32,6 +34,8 @@ class VercelWSGIMiddleware:
                 query_string = urlencode(params, doseq=True)
         elif path_info in ('/api/index', '/api/index/'):
             path_info = '/'
+
+        print(f"ENV_DEBUG_FINAL: PATH_INFO='{path_info}' QUERY_STRING='{query_string}'", file=sys.stderr)
 
         environ['PATH_INFO'] = path_info
         environ['QUERY_STRING'] = query_string
