@@ -64,6 +64,9 @@
                 </div>
                 <form method="POST" action="{{ url_for('login') }}">
                     <input type="hidden" name="login_type" value="faculty">
+                    {% if request.args.get('next') or request.form.get('next') %}
+                    <input type="hidden" name="next" value="{{ request.args.get('next', request.form.get('next', '')) }}">
+                    {% endif %}
                     <div class="modern-input-group">
                         <span class="input-icon"><i class="far fa-user"></i></span>
                         <input type="text" name="username" class="modern-input" placeholder="Faculty ID / Username" required autocomplete="username">

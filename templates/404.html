@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found{% endblock %}
+
+{% block content %}
+<section class="section" style="min-height: 65vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 60px 20px;">
+    <div class="container" style="max-width: 680px;">
+        <div style="margin-bottom: 24px;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 100px; height: 100px; border-radius: 50%; background: rgba(175, 141, 68, 0.12); border: 2px solid var(--mvgr-gold, #af8d44); margin-bottom: 16px;">
+                <i class="fas fa-compass" style="font-size: 46px; color: var(--mvgr-gold, #af8d44);"></i>
+            </div>
+            <h1 style="font-size: 64px; font-weight: 800; color: var(--mvgr-crimson, #7a1c28); margin: 0; line-height: 1.1; font-family: 'Playfair Display', serif;">404</h1>
+            <h2 style="font-size: 24px; font-weight: 700; color: #222; margin: 12px 0 8px;">Page or Resource Not Found</h2>
+            <p style="color: #666; font-size: 16px; line-height: 1.6; max-width: 520px; margin: 0 auto 28px;">
+                The page, event, or record you requested does not exist or may have been moved. Please verify the URL or return to one of our main portals below.
+            </p>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('home') }}" class="btn btn-primary" style="padding: 12px 24px; font-weight: 600;">
+                <i class="fas fa-home"></i> Return Home
+            </a>
+            <a href="{{ url_for('event_list') }}" class="btn btn-secondary" style="padding: 12px 24px; font-weight: 600; background: #fff; border: 1.5px solid #ccc; color: #333;">
+                <i class="fas fa-calendar-alt"></i> Browse Events
+            </a>
+            <a href="{{ url_for('contact') }}" class="btn btn-secondary" style="padding: 12px 24px; font-weight: 600; background: #fff; border: 1.5px solid #ccc; color: #333;">
+                <i class="fas fa-envelope"></i> Contact Support
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

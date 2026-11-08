@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, abort
 from datetime import datetime, timedelta
 import json
 import os
@@ -761,8 +761,7 @@ def event_detail(event_id):
     current_events = get_current_events()
     event = next((e for e in current_events if e['id'] == event_id), None)
     if not event:
-        flash('Event not found.', 'danger')
-        return redirect(url_for('event_list'))
+        abort(404)
     
     clean_roll = session.get('student', '').strip().upper() if session.get('student') else ''
     is_registered = bool(clean_roll and any(r.strip().upper() == clean_roll for r in event.get('registered_volunteers', [])))
@@ -983,8 +982,7 @@ def news():
 def news_detail(news_id):
     item = next((n for n in news_items if n['id'] == news_id), None)
     if not item:
-        flash('News article not found.', 'warning')
-        return redirect(url_for('news'))
+        abort(404)
     other_news = [n for n in news_items if n['id'] != news_id][:3]
     return render_template('news_detail.html', item=item, other_news=other_news)
 
@@ -1171,16 +1169,29 @@ def send_contact_email_notification(name, sender_email, subject, message_body):
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
+        # Honeypot spam check: if filled, discard without alerting bot
+        if request.form.get('website'):
+            flash('Your message has been received! Our coordinators will get back to you soon.', 'success')
+            return redirect(url_for('contact'))
+
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').strip()
         subject = request.form.get('subject', '').strip()
         message = request.form.get('message', '').strip()
 
+        if not name or not email or not message:
+            flash('Please fill in all required fields (Name, Email, Message).', 'danger')
+            return redirect(url_for('contact'))
+
+        if '@' not in email or '.' not in email or len(email) < 5:
+            flash('Please provide a valid email address.', 'danger')
+            return redirect(url_for('contact'))
+
         msg = {
             'id': get_next_id(contacts),
             'name': name,
             'email': email,
-            'subject': subject,
+            'subject': subject or 'General Inquiry',
             'message': message,
             'date': datetime.now().strftime('%Y-%m-%d %H:%M')
         }
@@ -1188,9 +1199,11 @@ def contact():
         db.insert_contact_message(msg)
 
         # Trigger direct email notification to support.nssmvgr@gmail.com
-        send_contact_email_notification(name, email, subject, message)
-
-        flash('Your message has been sent directly to support.nssmvgr@gmail.com! Our coordinators will get back to you soon.', 'success')
+        sent, err_msg = send_contact_email_notification(name, email, subject or 'General Inquiry', message)
+        if sent:
+            flash('Your message has been sent directly to support.nssmvgr@gmail.com! Our coordinators will get back to you soon.', 'success')
+        else:
+            flash('Your message has been received and saved! NSS coordinators will get back to you soon.', 'success')
         return redirect(url_for('contact'))
     return render_template('contact.html')
 
@@ -1207,6 +1220,7 @@ def login():
         if login_type in ('faculty', 'admin'):
             username = request.form.get('username', '').strip()
             password = request.form.get('password', '').strip()
+            next_url = request.args.get('next') or request.form.get('next')
             
             fac = next((f for f in faculty_members if f['username'].lower() == username.lower() or f['faculty_id'].upper() == username.upper() or f['email'].lower() == username.lower()), None)
             if not fac and re.match(r'^[a-zA-Z]', username):
@@ -1222,10 +1236,12 @@ def login():
                 session['user_email'] = fac['email']
                 session.pop('student', None)
                 flash(f'Welcome, {fac["name"]}! Logged in to Faculty Console.', 'success')
+                if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+                    return redirect(next_url)
                 return redirect(url_for('faculty_dashboard'))
             else:
                 flash('Invalid faculty credentials. Please check your Faculty ID and password.', 'danger')
-                return redirect(url_for('login', tab='faculty'))
+                return redirect(url_for('login', tab='faculty', next=next_url if next_url else None))
         
         # 2. Faculty Registration
         elif login_type == 'faculty_register':
@@ -1668,6 +1684,11 @@ def admin_dashboard():
                            audit_logs=filtered_logs,
                            faculty_summary=faculty_summary,
                            current_filter=filter_type)
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
 
 
 if __name__ == '__main__':
