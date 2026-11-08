@@ -3,6 +3,9 @@ from datetime import datetime, timedelta
 import json
 import os
 import re
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__,
@@ -993,19 +996,109 @@ def gallery():
 
 # ─── Contact ──────────────────────────────────────────────────────────────────
 
+def send_contact_email_notification(name, sender_email, subject, message_body):
+    recipient = os.environ.get('CONTACT_RECIPIENT_EMAIL', 'support.nssmvgr@gmail.com').strip()
+    smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com').strip()
+    try:
+        smtp_port = int(os.environ.get('SMTP_PORT', '587').strip())
+    except (ValueError, TypeError):
+        smtp_port = 587
+    smtp_user = os.environ.get('SMTP_USER', 'support.nssmvgr@gmail.com').strip()
+    smtp_password = os.environ.get('SMTP_PASSWORD', '').strip()
+
+    if not smtp_password:
+        print(f"ℹ️ SMTP_PASSWORD not set in environment. Notification for {recipient} saved to Supabase.")
+        return False, "SMTP credentials not configured"
+
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f"[NSS MVGR Portal Inquiry] {subject}"
+        msg['From'] = f"MVGR NSS Web Portal <{smtp_user}>"
+        msg['To'] = recipient
+        msg['Reply-To'] = sender_email
+
+        html_content = f"""
+        <html>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f7f6f2; padding: 24px; margin: 0;">
+            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 10px; border: 1px solid #e5e0d8; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                <div style="background: #18191c; padding: 22px 24px; border-bottom: 3px solid #af8d44; text-align: center;">
+                    <h2 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 700;">MVGR NSS Portal Inquiry</h2>
+                    <p style="color: #af8d44; margin: 6px 0 0; font-size: 13px; font-weight: 600;">Direct Notification &bull; Support Desk</p>
+                </div>
+                <div style="padding: 24px;">
+                    <div style="background: #fdfcf9; border: 1px solid #ebe6dc; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="padding: 6px 0; color: #777; font-size: 13px; width: 100px; text-transform: uppercase;">From</td>
+                                <td style="padding: 6px 0; color: #18191c; font-size: 15px; font-weight: 700;">{name}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; color: #777; font-size: 13px; text-transform: uppercase;">Sender Email</td>
+                                <td style="padding: 6px 0; font-size: 14.5px;"><a href="mailto:{sender_email}" style="color: #1a73e8; text-decoration: none; font-weight: 600;">{sender_email}</a></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; color: #777; font-size: 13px; text-transform: uppercase;">Subject</td>
+                                <td style="padding: 6px 0; color: #18191c; font-size: 15px; font-weight: 600;">{subject}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div style="margin-bottom: 24px;">
+                        <span style="font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Message Content:</span>
+                        <div style="background: #fff; border: 1.5px solid #ebe7df; border-left: 4px solid #af8d44; padding: 18px; border-radius: 6px; font-size: 14.5px; line-height: 1.65; color: #222; white-space: pre-wrap;">{message_body}</div>
+                    </div>
+                    <div style="text-align: center; margin: 24px 0 10px;">
+                        <a href="mailto:{sender_email}?subject=Re: {subject}" style="background: #af8d44; color: #ffffff; padding: 12px 26px; text-decoration: none; border-radius: 6px; font-weight: 700; font-size: 14px; display: inline-block;">
+                            Reply Directly to {name} &rarr;
+                        </a>
+                    </div>
+                </div>
+                <div style="background: #faf8f5; padding: 14px 20px; text-align: center; border-top: 1px solid #eee8dd; font-size: 12px; color: #888;">
+                    MVGR College of Engineering (Autonomous) &bull; National Service Scheme (NSS Unit)
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        text_content = f"New Inquiry Received via MVGR NSS Web Portal\n\nFrom: {name} ({sender_email})\nSubject: {subject}\n\nMessage:\n{message_body}\n\n--\nReply directly to {sender_email}"
+
+        msg.attach(MIMEText(text_content, 'plain'))
+        msg.attach(MIMEText(html_content, 'html'))
+
+        with smtplib.SMTP(smtp_server, smtp_port, timeout=12) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.sendmail(smtp_user, [recipient], msg.as_string())
+
+        return True, "Email sent successfully"
+    except Exception as e:
+        print(f"⚠️ SMTP send error: {e}")
+        return False, str(e)
+
+
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip()
+        subject = request.form.get('subject', '').strip()
+        message = request.form.get('message', '').strip()
+
         msg = {
             'id': get_next_id(contacts),
-            'name': request.form['name'],
-            'email': request.form['email'],
-            'subject': request.form['subject'],
-            'message': request.form['message'],
+            'name': name,
+            'email': email,
+            'subject': subject,
+            'message': message,
             'date': datetime.now().strftime('%Y-%m-%d %H:%M')
         }
-        contacts.append(msg)
-        flash('Your message has been sent! We will get back to you soon.', 'success')
+        contacts.insert(0, msg)
+        db.insert_contact_message(msg)
+
+        # Trigger direct email notification to support.nssmvgr@gmail.com
+        send_contact_email_notification(name, email, subject, message)
+
+        flash('Your message has been sent directly to support.nssmvgr@gmail.com! Our coordinators will get back to you soon.', 'success')
         return redirect(url_for('contact'))
     return render_template('contact.html')
 
@@ -1334,13 +1427,16 @@ def faculty_dashboard():
         and not any(term in log.get('action_type', '').lower() or term in log.get('description', '').lower() or term in log.get('target', '').lower() for term in excluded_terms)
     ]
     
+    contact_messages = db.fetch_contact_messages(contacts)
+
     stats = {
         'total_volunteers': len(volunteers),
         'active_volunteers': len([v for v in volunteers if v['status'] == 'active']),
         'total_events': len(events),
         'upcoming_events': len([e for e in events if e['status'] == 'upcoming']),
         'total_hours': sum(v.get('hours_completed', 0) for v in volunteers),
-        'my_actions_count': len(my_actions)
+        'my_actions_count': len(my_actions),
+        'total_messages': len(contact_messages)
     }
     return render_template('faculty_dashboard.html',
                            stats=stats,
@@ -1349,6 +1445,7 @@ def faculty_dashboard():
                            my_actions=my_actions,
                            news_items=news_items,
                            attendance_records=attendance_records,
+                           contact_messages=contact_messages,
                            fac_name=fac_name,
                            fac_id=fac_id,
                            fac_dept=fac_dept)

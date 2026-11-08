@@ -42,6 +42,13 @@
                 <span class="link-icon"><i class="fas fa-bullhorn"></i></span>
                 <span class="link-text">Publish Circular</span>
             </button>
+            <button type="button" class="sidebar-nav-btn" data-tab="messages" onclick="switchFacultyPanel('messages')">
+                <span class="link-icon"><i class="fas fa-inbox"></i></span>
+                <span class="link-text">Inquiries & Messages</span>
+                {% if contact_messages %}
+                <span style="margin-left:auto; background:#af8d44; color:#fff; font-size:11px; padding:2px 7px; border-radius:10px; font-weight:700;">{{ contact_messages|length }}</span>
+                {% endif %}
+            </button>
             <a href="javascript:void(0)" onclick="openPasswordModal()" class="sidebar-nav-btn" style="text-decoration:none;">
                 <span class="link-icon"><i class="fas fa-key"></i></span>
                 <span class="link-text">Change Password</span>
@@ -645,6 +652,69 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 PANEL 7: INQUIRIES & MESSAGES
+                 ═══════════════════════════════════════════════════════════════ -->
+            <section id="panel-messages" class="faculty-panel-section" style="display:none;">
+                <div class="portal-panel full-width">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fas fa-inbox gold-icon"></i> Contact Inquiries & Support Messages</h3>
+                            <p style="font-size:13px; color:#777; margin-top:4px;">Messages submitted via the public Contact Us portal (forwarded to <strong>support.nssmvgr@gmail.com</strong>).</p>
+                        </div>
+                        <span class="panel-counter">{{ contact_messages|length }} Inquiries</span>
+                    </div>
+
+                    <div class="panel-body p-0">
+                        {% if contact_messages %}
+                        <div class="table-responsive">
+                            <table class="portal-modern-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Sender</th>
+                                        <th>Subject</th>
+                                        <th>Message</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for msg in contact_messages %}
+                                    <tr>
+                                        <td style="white-space:nowrap; font-size:12.5px; color:#666;">
+                                            {{ msg.created_at[:10] if msg.created_at else (msg.date or 'Recent') }}
+                                        </td>
+                                        <td>
+                                            <div style="font-weight:700; color:#18191c;">{{ msg.name }}</div>
+                                            <div style="font-size:12px; color:#1a73e8;"><a href="mailto:{{ msg.email }}">{{ msg.email }}</a></div>
+                                        </td>
+                                        <td style="font-weight:600; color:#18191c; max-width:200px;">
+                                            {{ msg.subject }}
+                                        </td>
+                                        <td style="font-size:13px; color:#444; max-width:320px; line-height:1.5;">
+                                            {{ msg.message }}
+                                        </td>
+                                        <td>
+                                            <a href="mailto:{{ msg.email }}?subject=Re: {{ msg.subject }}" class="btn-card-outline" style="padding:6px 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px; text-decoration:none;">
+                                                <i class="fas fa-reply"></i> Reply
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-portal-state" style="padding:40px 20px;">
+                            <i class="fas fa-inbox" style="font-size:40px; color:#ccc; margin-bottom:12px;"></i>
+                            <h4>No Inquiries Received Yet</h4>
+                            <p>Messages submitted through the public Contact form will appear here and are sent to support.nssmvgr@gmail.com.</p>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </section>

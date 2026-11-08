@@ -243,3 +243,34 @@ def insert_audit_log(log_dict):
             supabase_client.table('audit_logs').insert(log_dict).execute()
         except Exception as e:
             print(f"Supabase insert_audit_log error: {e}")
+
+# ─── CONTACTS / INQUIRIES ───────────────────────────────────────────────────
+
+def fetch_contact_messages(fallback_list=None):
+    if fallback_list is None:
+        fallback_list = []
+    if not is_connected():
+        return fallback_list
+    try:
+        res = supabase_client.table('contacts').select('*').order('id', desc=True).execute()
+        return res.data if res.data else fallback_list
+    except Exception as e:
+        print(f"Supabase fetch_contact_messages error: {e}")
+        return fallback_list
+
+def insert_contact_message(msg_dict):
+    if is_connected():
+        try:
+            payload = {
+                'name': msg_dict.get('name', '').strip(),
+                'email': msg_dict.get('email', '').strip(),
+                'subject': msg_dict.get('subject', '').strip(),
+                'message': msg_dict.get('message', '').strip()
+            }
+            res = supabase_client.table('contacts').insert(payload).execute()
+            if res.data and len(res.data) > 0:
+                msg_dict['id'] = res.data[0].get('id', msg_dict.get('id', 1))
+                return res.data[0]
+        except Exception as e:
+            print(f"Supabase insert_contact_message error: {e}")
+    return msg_dict
