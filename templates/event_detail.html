@@ -1,9 +1,14 @@
 {% extends "base.html" %}
-{% block title %}{{ event.title }} - Event Details{% endblock %}
+{% block title %}{{ event.title }}{% endblock %}
 {% block content %}
 
 <section class="page-header">
     <div class="container">
+        <div class="page-header-logos">
+            <img src="{{ url_for('static', filename='images/mvgr_logo.png') }}" alt="MVGR Crest" class="page-header-crest" width="52" height="52">
+            <img src="{{ url_for('static', filename='images/nss_logo_real.svg') }}" alt="NSS Logo" class="page-header-logo" width="50" height="50">
+        </div>
+        <div class="page-header-inst-sub">Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</div>
         <h1>{{ event.title }}</h1>
         <nav class="breadcrumb"><a href="/">Home</a> <i class="fas fa-chevron-right"></i> <a href="{{ url_for('event_list') }}">Events</a> <i class="fas fa-chevron-right"></i> {{ event.title }}</nav>
     </div>
@@ -22,7 +27,7 @@
                     <p>{{ event.description }}</p>
 
                     <div class="event-info-grid">
-                        <div class="info-item"><i class="fas fa-calendar"></i><div><strong>Date</strong><span>{{ event.date }}</span></div></div>
+                        <div class="info-item"><i class="fas fa-calendar"></i><div><strong>Date</strong><span>{{ event.date|format_date }}</span></div></div>
                         <div class="info-item"><i class="fas fa-clock"></i><div><strong>Time</strong><span>{{ event.time }}</span></div></div>
                         <div class="info-item"><i class="fas fa-map-marker-alt"></i><div><strong>Venue</strong><span>{{ event.venue }}</span></div></div>
                         <div class="info-item"><i class="fas fa-hourglass-half"></i><div><strong>Service Hours</strong><span>{{ event.hours }} hours</span></div></div>

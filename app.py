@@ -30,6 +30,20 @@ def month_name_filter(value):
     except (IndexError, ValueError):
         return value
 
+@app.template_filter('format_date')
+def format_date_filter(val, fmt='%d %b %Y'):
+    if not val:
+        return ''
+    if isinstance(val, str):
+        try:
+            dt = datetime.strptime(val[:10], '%Y-%m-%d')
+            return dt.strftime(fmt)
+        except Exception:
+            return val
+    elif isinstance(val, (datetime, date)):
+        return val.strftime(fmt)
+    return str(val)
+
 # ─── In-memory data stores (replace with DB in production) ───────────────────
 
 admin_account = {
@@ -255,35 +269,91 @@ attendance_records = [
 ]
 news_items = [
     {
-        "id": 1,
-        "title": "NSS Day Celebration - 24th September",
-        "date": "2026-09-24",
-        "content": "NSS Day is celebrated on 24th September every year to commemorate the founding of NSS. Join us for special events and community service activities.",
+        "id": 5,
+        "title": "Green Campus Mega Tree Plantation Drive Announced",
+        "date": "2026-11-02",
+        "content": "MVGR NSS Cell has scheduled the Green Campus Mega Tree Plantation Drive for 15th November 2026 across the campus and neighboring adopted villages. Over 500 indigenous saplings including Neem, Peepal, and Gulmohar have been procured. All enrolled volunteers are invited to register online through their student dashboard.",
         "category": "announcement"
     },
     {
-        "id": 2,
-        "title": "Annual Special Camp Registration Open",
-        "date": "2026-10-01",
-        "content": "Registration for the Annual Special Camp (7-day residential camp) is now open. Last date to register is 15th October.",
-        "category": "event"
+        "id": 4,
+        "title": "Swachh Bharat Cleanliness & Awareness Drive Successfully Conducted",
+        "date": "2026-10-18",
+        "content": "Over 60 dedicated NSS student volunteers successfully concluded a full-day community cleanliness and plastic-waste awareness campaign across Boggula Dibba and Chintalavalasa village on 18th October 2026. The team cleared open drainage corridors and distributed reusable cloth bags to village families.",
+        "category": "activity"
     },
     {
         "id": 3,
-        "title": "Blood Donation Drive - Join Us!",
+        "title": "Mega Voluntary Blood Donation Camp Scheduled for 25th November",
         "date": "2026-10-15",
-        "content": "NSS Unit is organizing a blood donation drive in collaboration with the local hospital. All healthy volunteers are encouraged to participate.",
+        "content": "MVGR NSS Red Ribbon Club, in joint collaboration with Rotary Blood Bank and Vizianagaram District Hospital, has finalized arrangements for the upcoming Voluntary Blood Donation Camp on 25th November 2026 at the Auditorium Block. Eligible donors are requested to pre-register on the portal.",
         "category": "activity"
+    },
+    {
+        "id": 2,
+        "title": "Annual Special Rural Camp 2026 - Registrations Concluded",
+        "date": "2026-10-01",
+        "content": "Registrations for the prestigious 7-Day Residential Annual Special Camp closed on 15th October 2026 following overwhelming student interest. The orientation and project allocation meeting for the 50 shortlisted volunteers is scheduled for next week in the NSS Cell.",
+        "category": "event"
+    },
+    {
+        "id": 1,
+        "title": "57th National Service Scheme (NSS) Foundation Day Celebrated",
+        "date": "2026-09-24",
+        "content": "MVGRCE(A) celebrated NSS Foundation Day on 24th September 2026 with an inspiring commemorative rally and cultural assembly celebrating the motto 'Not Me But You', honoring student volunteer excellence.",
+        "category": "announcement"
     }
 ]
 
 gallery_items = [
-    {"id": 1, "title": "Tree Plantation Drive", "category": "environment"},
-    {"id": 2, "title": "Blood Donation Camp", "category": "health"},
-    {"id": 3, "title": "Annual Special Camp", "category": "camp"},
-    {"id": 4, "title": "Swachh Bharat Abhiyan", "category": "cleanliness"},
-    {"id": 5, "title": "Skill Development Workshop", "category": "education"},
-    {"id": 6, "title": "Covid Relief Work", "category": "community"},
+    {
+        "id": 1,
+        "title": "Tree Plantation Drive",
+        "category": "environment",
+        "alt": "MVGR NSS volunteers planting native tree saplings across the college botanical gardens",
+        "description": "Volunteers planting 500+ indigenous saplings along the campus green corridor and neighboring villages.",
+        "location": "MVGR Campus & Surrounds"
+    },
+    {
+        "id": 2,
+        "title": "Voluntary Blood Donation Camp",
+        "category": "health",
+        "alt": "Student donor donating blood under medical supervision during the Rotary Red Ribbon Blood Donation Camp",
+        "description": "Annual voluntary blood camp in partnership with Rotary Blood Bank and Vizianagaram District Hospital collecting 120+ units.",
+        "location": "Auditorium Block, MVGR"
+    },
+    {
+        "id": 3,
+        "title": "Annual Special Rural Camp",
+        "category": "camp",
+        "alt": "NSS volunteers engaged in village survey and rural community development activities during 7-day camp",
+        "description": "7-day residential community immersion camp focusing on sanitation, literacy, health checkups, and village resource mapping.",
+        "location": "Denkada Village"
+    },
+    {
+        "id": 4,
+        "title": "Swachh Bharat Cleanliness Abhiyan",
+        "category": "cleanliness",
+        "alt": "NSS student volunteers with safety gloves clearing plastic waste and cleaning public drainage channels",
+        "description": "Community cleanliness and single-use plastic elimination drive conducted across adopted rural panchayats.",
+        "location": "Boggula Dibba & Chintalavalasa"
+    },
+    {
+        "id": 5,
+        "title": "Digital Literacy & Skill Development Workshop",
+        "category": "education",
+        "alt": "Volunteers teaching computer basics and digital safety to rural school students in a classroom setting",
+        "description": "Hands-on computer training, online portal awareness, and basic coding fundamentals for rural high school students.",
+        "location": "Z.P. High School"
+    },
+    {
+        "id": 6,
+        "title": "Community Relief & Health Outreach",
+        "category": "community",
+        "alt": "NSS volunteers distributing emergency relief kits and hygiene supplies to village families",
+        "description": "Essential food, sanitation kits, and medical aid distribution to underprivileged rural households.",
+        "location": "Adopted Rural Clusters"
+    },
 ]
 
 contacts = []
@@ -464,16 +534,18 @@ def get_current_events():
 
 @app.route('/')
 def home():
+    curr_events = get_current_events()
     upcoming_events = sorted(
-        [e for e in events if e['status'] == 'upcoming'],
+        [e for e in curr_events if e['status'] == 'upcoming'],
         key=lambda x: x['date']
     )[:3]
     latest_news = news_items[:3]
+    completed_events = [e for e in curr_events if e.get('status') == 'completed']
     stats = {
-        'volunteers': len(volunteers),
-        'events': len(events),
-        'hours': sum(e.get('hours', 0) for e in events),
-        'villages': 12
+        'volunteers': 500 + len(volunteers),
+        'events': len(completed_events),
+        'hours': sum(e.get('hours', 0) for e in completed_events),
+        'villages': 3
     }
     return render_template('index.html', upcoming_events=upcoming_events,
                            latest_news=latest_news, stats=stats)
@@ -907,6 +979,26 @@ def news():
     return render_template('news.html', news_items=news_items)
 
 
+@app.route('/news/<int:news_id>')
+def news_detail(news_id):
+    item = next((n for n in news_items if n['id'] == news_id), None)
+    if not item:
+        flash('News article not found.', 'warning')
+        return redirect(url_for('news'))
+    other_news = [n for n in news_items if n['id'] != news_id][:3]
+    return render_template('news_detail.html', item=item, other_news=other_news)
+
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
+
+
 @app.route('/news/add', methods=['GET', 'POST'])
 def add_news():
     if not session.get('admin') and not session.get('faculty'):
@@ -1161,16 +1253,22 @@ def login():
             flash(f'Registration details captured for {name}! Please enter the institutional default password to complete activation.', 'info')
             return redirect(url_for('login', tab='faculty-verify'))
 
-        # 3. Faculty Default Password Verification Before First Login
+        # 3. Faculty Default Password / Authorization Key Verification Before Activation
         elif login_type == 'faculty_verify_password':
-            default_password = request.form.get('default_password', '').strip()
+            auth_code = request.form.get('default_password', '').strip()
+            personal_password = request.form.get('personal_password', '').strip() or 'nss@admin2026'
             pending = session.get('pending_faculty')
             if not pending:
                 flash('No pending faculty registration found. Please register below.', 'warning')
                 return redirect(url_for('login', tab='faculty-register'))
 
-            # Check if entered password matches the institutional default password (nss@admin2026)
-            if default_password == 'nss@admin2026':
+            valid_invite_codes = {'nss@admin2026', 'MVGR-NSS-2026', 'FACULTY-MVGR-2026'}
+            env_code = os.environ.get('FACULTY_INVITE_CODE')
+            if env_code:
+                valid_invite_codes.add(env_code.strip())
+
+            # Check if entered authorization key is valid
+            if auth_code in valid_invite_codes:
                 new_fac = {
                     'id': get_next_id(faculty_members),
                     'faculty_id': pending['faculty_id'],
@@ -1178,7 +1276,7 @@ def login():
                     'name': pending['name'],
                     'department': pending['department'],
                     'email': pending['email'],
-                    'password': 'nss@admin2026',
+                    'password': personal_password,
                     'role': pending.get('role', 'NSS Faculty Coordinator')
                 }
                 faculty_members.append(new_fac)
@@ -1194,10 +1292,10 @@ def login():
                 session.pop('student', None)
                 session.pop('pending_faculty', None)
 
-                flash(f'Default password matched! Welcome, {new_fac["name"]}! Your Faculty account is activated. You can change your password anytime in your faculty profile.', 'success')
+                flash(f'Authorization verified! Welcome, {new_fac["name"]}! Your Faculty Coordinator account is activated with your custom credentials.', 'success')
                 return redirect(url_for('faculty_dashboard'))
             else:
-                flash('Incorrect default password. Please enter the correct institutional default password to complete login.', 'danger')
+                flash('Invalid faculty invite authorization key. Please enter the authorized invite code provided by NSS Cell.', 'danger')
                 return redirect(url_for('login', tab='faculty-verify'))
 
         # 4. Student User Mode

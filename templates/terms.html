@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Terms of Service{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <div class="page-header-logos">
+            <img src="{{ url_for('static', filename='images/mvgr_logo.png') }}" alt="MVGR Crest" class="page-header-crest" width="52" height="52">
+            <img src="{{ url_for('static', filename='images/nss_logo_real.svg') }}" alt="NSS Logo" class="page-header-logo" width="50" height="50">
+        </div>
+        <div class="page-header-inst-sub">Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</div>
+        <h1>Terms of Service</h1>
+        <p>Volunteer Code of Conduct & Portal Usage Guidelines</p>
+        <nav class="breadcrumb">
+            <a href="/">Home</a> <i class="fas fa-chevron-right"></i>
+            Terms of Service
+        </nav>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container" style="max-width: 860px;">
+        <div style="background: white; border-radius: var(--radius); padding: 40px; box-shadow: var(--shadow); border: 1px solid var(--border); line-height: 1.8;">
+            <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 24px;">
+                <strong>Effective Date:</strong> 8 November 2026 &bull; MVGRCE(A) NSS Cell
+            </p>
+
+            <h3 style="color: var(--nss-blue); font-size: 20px; margin-bottom: 12px;">1. Volunteer Pledge & Code of Conduct</h3>
+            <p>Every enrolled student volunteer pledges to uphold the core values of the National Service Scheme and its motto <em>"Not Me But You"</em>. Volunteers agree to participate in community activities with integrity, punctuality, and mutual respect toward village communities and fellow volunteers.</p>
+
+            <h3 style="color: var(--nss-blue); font-size: 20px; margin-bottom: 12px;">2. Service Hours & Certification Criteria</h3>
+            <p>To qualify for the official University NSS Certificate and academic credits:</p>
+            <ul style="list-style: disc; margin-left: 24px; margin-bottom: 20px;">
+                <li>Volunteers must complete at least 240 hours of verified community service over a 2-year tenure.</li>
+                <li>Participation in at least one 7-day Special Rural Residential Camp is mandatory.</li>
+                <li>All hours must be verified and approved by the designated Faculty Coordinator.</li>
+            </ul>
+
+            <h3 style="color: var(--nss-blue); font-size: 20px; margin-bottom: 12px;">3. Portal Account Responsibility</h3>
+            <p>Users are responsible for maintaining the confidentiality of their credentials. Any unauthorized action, spoofing of attendance, or falsification of service hours is subject to disciplinary action under MVGR Institutional Academic Regulations.</p>
+
+            <h3 style="color: var(--nss-blue); font-size: 20px; margin-bottom: 12px;">4. Amendments</h3>
+            <p>The NSS Unit reserves the right to update these terms to align with Ministry of Youth Affairs and Sports (MYAS) guidelines and institutional policies.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

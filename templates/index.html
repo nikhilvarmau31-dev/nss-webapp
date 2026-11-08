@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}NSS - Home | National Service Scheme{% endblock %}
+{% block title %}Home{% endblock %}
 {% block content %}
 
 <!-- Hero Section -->
@@ -10,10 +10,14 @@
             <img src="{{ url_for('static', filename='images/mvgr_logo.png') }}" alt="MVGR Crest" class="hero-crest">
             <img src="{{ url_for('static', filename='images/nss_logo_real.svg') }}" alt="NSS Logo" class="hero-logo">
         </div>
-        <p class="hero-inst-sub">Maharaj Vijayaram Gajapathi Raj College of Engineering (A)</p>
+        <div class="hero-inst-badge">
+            <p class="hero-inst-sub">Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</p>
+        </div>
         <h1>National Service Scheme</h1>
-        <p class="hero-motto">"Not Me But You"</p>
-        <p class="hero-desc">Serving the community, building the nation. Join thousands of youth in making a real difference through voluntary service.</p>
+        <div class="hero-motto-wrapper">
+            <p class="hero-motto"><span class="motto-quote">&ldquo;</span>NOT ME BUT YOU<span class="motto-quote">&rdquo;</span></p>
+        </div>
+        <p class="hero-desc">Serving the community, building the nation. Join our dedicated community of 500+ active NSS volunteers making a real difference through selfless service.</p>
         <div class="hero-buttons">
             <a href="{{ url_for('login', tab='register') }}" class="btn btn-primary">
                 <i class="fas fa-user-plus"></i> Join NSS Today
@@ -108,6 +112,7 @@
                 <div class="event-date-badge">
                     <span class="day">{{ event.date[8:10] }}</span>
                     <span class="month">{{ event.date[5:7] | int | month_name }}</span>
+                    <span class="year" style="font-size:10.5px; opacity:0.85; display:block; letter-spacing:0.5px; margin-top:2px;">{{ event.date[:4] }}</span>
                 </div>
                 <div class="event-info">
                     <span class="event-category">{{ event.category }}</span>
@@ -186,9 +191,9 @@
             <div class="news-card">
                 <span class="news-category {{ item.category }}">{{ item.category }}</span>
                 <h3>{{ item.title }}</h3>
-                <p class="news-date"><i class="fas fa-calendar"></i> {{ item.date }}</p>
-                <p>{{ item.content[:120] }}...</p>
-                <a href="{{ url_for('news') }}" class="read-more">Read More <i class="fas fa-arrow-right"></i></a>
+                <p class="news-date"><i class="fas fa-calendar-alt"></i> {{ item.date|format_date }}</p>
+                <p>{{ item.content[:130] }}...</p>
+                <a href="{{ url_for('news_detail', news_id=item.id) }}" class="read-more">Read Full Story <i class="fas fa-arrow-right"></i></a>
             </div>
             {% endfor %}
         </div>

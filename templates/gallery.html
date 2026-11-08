@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Gallery{% endblock %}
+{% block title %}Photo Gallery{% endblock %}
 {% block content %}
 <section class="page-header">
     <div class="container">
@@ -21,19 +21,24 @@
             <button class="filter-btn" data-filter="health">Health</button>
             <button class="filter-btn" data-filter="camp">Camp</button>
             <button class="filter-btn" data-filter="education">Education</button>
+            <button class="filter-btn" data-filter="cleanliness">Cleanliness</button>
             <button class="filter-btn" data-filter="community">Community</button>
         </div>
         <div class="gallery-grid">
             {% for item in gallery_items %}
             <div class="gallery-item {{ item.category }}">
-                <div class="gallery-placeholder">
-                    <i class="fas {% if item.category == 'environment' %}fa-leaf{% elif item.category == 'health' %}fa-heartbeat{% elif item.category == 'camp' %}fa-campground{% elif item.category == 'education' %}fa-graduation-cap{% else %}fa-hands-helping{% endif %}"></i>
+                <div class="gallery-placeholder" role="img" aria-label="{{ item.alt }}">
+                    <i class="fas {% if item.category == 'environment' %}fa-leaf{% elif item.category == 'health' %}fa-heartbeat{% elif item.category == 'camp' %}fa-campground{% elif item.category == 'education' %}fa-graduation-cap{% elif item.category == 'cleanliness' %}fa-broom{% else %}fa-hands-helping{% endif %}"></i>
                     <div class="gallery-overlay">
                         <p>{{ item.title }}</p>
                         <span class="gallery-category">{{ item.category }}</span>
                     </div>
                 </div>
-                <div class="gallery-caption">{{ item.title }}</div>
+                <div class="gallery-caption">
+                    <strong>{{ item.title }}</strong>
+                    <p style="font-size:12.5px; color:var(--text-muted); margin-top:4px; line-height:1.4;">{{ item.description }}</p>
+                    <span style="font-size:11px; color:var(--mvgr-gold); margin-top:6px; display:inline-block;"><i class="fas fa-map-marker-alt"></i> {{ item.location }}</span>
+                </div>
             </div>
             {% endfor %}
         </div>

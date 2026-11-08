@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ item.title }}{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <div class="page-header-logos">
+            <img src="{{ url_for('static', filename='images/mvgr_logo.png') }}" alt="MVGR Crest" class="page-header-crest" width="52" height="52">
+            <img src="{{ url_for('static', filename='images/nss_logo_real.svg') }}" alt="NSS Logo" class="page-header-logo" width="50" height="50">
+        </div>
+        <div class="page-header-inst-sub">Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</div>
+        <h1>News & Announcements</h1>
+        <nav class="breadcrumb">
+            <a href="/">Home</a> <i class="fas fa-chevron-right"></i>
+            <a href="{{ url_for('news') }}">News</a> <i class="fas fa-chevron-right"></i>
+            Article #{{ item.id }}
+        </nav>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container" style="max-width: 860px;">
+        <article style="background: white; border-radius: var(--radius); padding: 40px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+            <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
+                <span class="news-category {{ item.category }}">{{ item.category|capitalize }}</span>
+                <span style="color: var(--text-muted); font-size: 14px;"><i class="fas fa-calendar-alt"></i> {{ item.date|format_date }}</span>
+                <span style="color: var(--text-muted); font-size: 14px;"><i class="fas fa-user-edit"></i> MVGR NSS Media Desk</span>
+            </div>
+            
+            <h2 style="font-size: 28px; color: var(--nss-blue); font-family: var(--font-serif); margin-bottom: 24px; line-height: 1.3;">
+                {{ item.title }}
+            </h2>
+
+            <div style="font-size: 16px; line-height: 1.85; color: var(--text); border-top: 1px solid var(--border); padding-top: 24px;">
+                <p>{{ item.content }}</p>
+            </div>
+
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <a href="{{ url_for('news') }}" class="btn btn-outline" style="padding: 8px 20px;">
+                    <i class="fas fa-arrow-left"></i> Back to News List
+                </a>
+                <a href="{{ url_for('event_list') }}" class="btn btn-primary" style="padding: 8px 20px;">
+                    <i class="fas fa-calendar-check"></i> Explore Events
+                </a>
+            </div>
+        </article>
+
+        {% if other_news %}
+        <div style="margin-top: 50px;">
+            <h3 style="font-size: 22px; color: var(--nss-blue); margin-bottom: 20px;">Other Recent Updates</h3>
+            <div class="news-grid">
+                {% for o in other_news %}
+                <div class="news-card">
+                    <span class="news-category {{ o.category }}">{{ o.category }}</span>
+                    <h3>{{ o.title }}</h3>
+                    <p class="news-date"><i class="fas fa-calendar"></i> {{ o.date|format_date }}</p>
+                    <p>{{ o.content[:110] }}...</p>
+                    <a href="{{ url_for('news_detail', news_id=o.id) }}" class="read-more">Read Article <i class="fas fa-arrow-right"></i></a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

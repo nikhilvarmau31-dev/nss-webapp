@@ -26,14 +26,17 @@
         </div>
         <div class="news-full-grid">
             {% for item in news_items %}
-            <div class="news-full-card {{ item.category }}">
+            <div class="news-full-card {{ item.category }}" id="news-{{ item.id }}">
                 <div class="news-card-left">
                     <span class="news-category {{ item.category }}">{{ item.category }}</span>
-                    <span class="news-date"><i class="fas fa-calendar"></i> {{ item.date }}</span>
+                    <span class="news-date"><i class="fas fa-calendar-alt"></i> {{ item.date|format_date }}</span>
                 </div>
                 <div class="news-card-right">
                     <h3>{{ item.title }}</h3>
                     <p>{{ item.content }}</p>
+                    <a href="{{ url_for('news_detail', news_id=item.id) }}" class="read-more" style="color:var(--nss-blue); font-weight:600; font-size:13px; margin-top:10px; display:inline-flex; align-items:center; gap:6px;">
+                        View Full Story & Details <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
             </div>
             {% else %}
