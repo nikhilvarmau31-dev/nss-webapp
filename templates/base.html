@@ -33,7 +33,7 @@
             <li><a href="{{ url_for('news') }}" {% if request.endpoint == 'news' %}class="active"{% endif %}>News</a></li>
             <li><a href="{{ url_for('gallery') }}" {% if request.endpoint == 'gallery' %}class="active"{% endif %}>Gallery</a></li>
             <li><a href="{{ url_for('contact') }}" {% if request.endpoint == 'contact' %}class="active"{% endif %}>Contact</a></li>
-            <li><a href="{{ url_for('register') }}" {% if request.endpoint == 'register' %}class="active"{% endif %}>Join NSS</a></li>
+            <li><a href="{{ url_for('login', tab='register') }}" {% if (request.endpoint == 'login' and request.args.get('tab') == 'register') or request.endpoint == 'register' %}class="active"{% endif %}>Join NSS</a></li>
             {% if session.get('faculty') %}
             <li><a href="{{ url_for('faculty_dashboard') }}" class="btn-portal"><i class="fas fa-chalkboard-teacher"></i> Faculty Portal</a></li>
             <li><a href="{{ url_for('faculty_logout') }}" class="btn-logout" title="Logout"><i class="fas fa-sign-out-alt"></i></a></li>
@@ -103,7 +103,7 @@
             <div class="footer-col">
                 <h4>Get Involved</h4>
                 <ul>
-                    <li><a href="{{ url_for('register') }}">Volunteer Registration</a></li>
+                    <li><a href="{{ url_for('login', tab='register') }}">Volunteer Registration</a></li>
                     <li><a href="{{ url_for('event_list') }}">Upcoming Events</a></li>
                     <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
                 </ul>

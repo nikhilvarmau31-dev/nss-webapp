@@ -21,7 +21,7 @@
             <!-- EXACTLY 2 LOGINS DISPLAYED IN TABS -->
             <div class="login-nav-tabs">
                 <button type="button" class="login-tab-btn {% if active_tab not in ('faculty', 'faculty-register', 'faculty-verify') %}active{% endif %}" data-tab="student" id="btn-tab-student">
-                    {% if active_tab == 'register' %}Volunteer Register{% else %}Student Login{% endif %}
+                    {% if active_tab == 'register' %}Join NSS / Register{% else %}Student Login{% endif %}
                 </button>
                 <button type="button" class="login-tab-btn {% if active_tab in ('faculty', 'faculty-register', 'faculty-verify') %}active{% endif %}" data-tab="faculty">
                     Faculty Login
@@ -52,7 +52,7 @@
                     </button>
                 </form>
                 <div class="card-footer-action">
-                    <p>New volunteer? <a href="#" class="switch-tab-link" data-target="register">Register here</a></p>
+                    <p>New volunteer? <a href="#" class="switch-tab-link" data-target="register">Join NSS / Register here</a></p>
                 </div>
             </div>
 
@@ -84,7 +84,7 @@
             <!-- REGISTRATION PANE: Student Volunteer -->
             <div class="tab-pane {% if active_tab == 'register' %}active{% endif %}" id="tab-register">
                 <div class="card-headings">
-                    <h2 class="card-title">Volunteer Register</h2>
+                    <h2 class="card-title">Join NSS / Volunteer Register</h2>
                     <p class="card-desc">Join MVGR NSS Unit and start serving.</p>
                 </div>
                 <form method="POST" action="{{ url_for('login') }}">
@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function activateTab(tabId) {
         if (studentTabBtn) {
-            studentTabBtn.textContent = (tabId === 'register') ? 'Volunteer Register' : 'Student Login';
+            studentTabBtn.textContent = (tabId === 'register') ? 'Join NSS / Register' : 'Student Login';
         }
         tabBtns.forEach(btn => {
             const btnTab = btn.getAttribute('data-tab');

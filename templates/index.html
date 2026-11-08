@@ -15,7 +15,7 @@
         <p class="hero-motto">"Not Me But You"</p>
         <p class="hero-desc">Serving the community, building the nation. Join thousands of youth in making a real difference through voluntary service.</p>
         <div class="hero-buttons">
-            <a href="{{ url_for('register') }}" class="btn btn-primary">
+            <a href="{{ url_for('login', tab='register') }}" class="btn btn-primary">
                 <i class="fas fa-user-plus"></i> Join NSS Today
             </a>
             <a href="{{ url_for('about') }}" class="btn btn-outline">
@@ -205,7 +205,7 @@
             <h2>Ready to Make a Difference?</h2>
             <p>Join our NSS unit and become part of a movement that transforms lives. Every hour you give makes our community stronger.</p>
             <div class="cta-buttons">
-                <a href="{{ url_for('register') }}" class="btn btn-white">
+                <a href="{{ url_for('login', tab='register') }}" class="btn btn-white">
                     <i class="fas fa-user-plus"></i> Join NSS
                 </a>
                 <a href="{{ url_for('contact') }}" class="btn btn-outline-white">

@@ -54,6 +54,12 @@ def get_volunteer_by_roll_no(roll_no):
             v['hours_completed'] = v.get('hours', v.get('hours_completed', 0))
             v['hours'] = v.get('hours_completed', 0)
             return v
+        res = supabase_client.table('volunteers').select('*').ilike('roll_no', f"%{clean_roll}%").execute()
+        if res.data and len(res.data) > 0:
+            v = res.data[0]
+            v['hours_completed'] = v.get('hours', v.get('hours_completed', 0))
+            v['hours'] = v.get('hours_completed', 0)
+            return v
     except Exception as e:
         print(f"Supabase get_volunteer_by_roll_no error: {e}")
     return None

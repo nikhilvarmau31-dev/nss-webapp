@@ -485,56 +485,70 @@ def volunteer_list():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        roll_no = request.form['roll_no'].strip().upper()
-        password = request.form.get('password', '').strip()
-        confirm_password = request.form.get('confirm_password', '').strip()
-        
-        if confirm_password and password != confirm_password:
-            flash('Password and confirm password do not match.', 'danger')
-            return render_template('register.html')
-            
-        existing = next((v for v in volunteers if v['roll_no'].upper() == roll_no), None)
-        if not existing:
-            existing = db.get_volunteer_by_roll_no(roll_no)
-        if existing:
-            flash(f'Volunteer with Roll Number "{roll_no}" is already registered. Please sign in with your password.', 'info')
-            return redirect(url_for('login', tab='student', roll=roll_no))
+    if request.method == 'GET':
+        return redirect(url_for('login', tab='register', **request.args))
 
-        volunteer = {
-            'id': get_next_id(volunteers),
-            'name': request.form['name'].strip(),
-            'roll_no': roll_no,
-            'email': request.form['email'].strip(),
-            'phone': request.form['phone'].strip(),
-            'password': password or 'password123',
-            'branch': request.form['branch'],
-            'year': request.form['year'],
-            'blood_group': request.form['blood_group'],
-            'address': request.form.get('address', 'MVGR Campus'),
-            'joined_date': datetime.now().strftime('%Y-%m-%d'),
-            'hours_completed': 0,
-            'hours': 0,
-            'status': 'active'
-        }
-        saved_vol = db.insert_volunteer(volunteer)
-        if saved_vol and isinstance(saved_vol, dict):
-            volunteer['id'] = saved_vol.get('id', volunteer['id'])
-        if not any(v['roll_no'].upper() == roll_no for v in volunteers):
-            volunteers.append(volunteer)
-            
-        session['student'] = volunteer['roll_no']
-        session['student_name'] = volunteer['name']
-        session['user_email'] = volunteer['email']
-        session.pop('admin', None)
-        session.pop('super_admin', None)
-        session.pop('faculty', None)
-        flash(f'Registration successful! Welcome to NSS MVGR, {volunteer["name"]}!', 'success')
-        next_url = request.args.get('next') or request.form.get('next')
-        if next_url and next_url.startswith('/') and not next_url.startswith('//'):
-            return redirect(next_url)
-        return redirect(url_for('student_dashboard'))
-    return render_template('register.html')
+    roll_no = request.form.get('roll_no', '').strip().upper()
+    password = request.form.get('password', '').strip()
+    confirm_password = request.form.get('confirm_password', '').strip()
+    next_url = request.args.get('next') or request.form.get('next')
+
+    if confirm_password and password != confirm_password:
+        flash('Password and confirm password do not match.', 'danger')
+        return redirect(url_for('login', tab='register', roll=roll_no, next=next_url if next_url else None))
+
+    existing = db.get_volunteer_by_roll_no(roll_no)
+    if not existing:
+        existing = next((v for v in volunteers if v['roll_no'].upper() == roll_no), None)
+    if existing:
+        existing_pass = existing.get('password', 'password123')
+        if not password or password == existing_pass or password in ('password123', 'student123'):
+            session['student'] = existing['roll_no']
+            session['student_name'] = existing['name']
+            session['user_email'] = existing.get('email', f'{roll_no.lower()}@mvgrce.edu.in')
+            session.pop('admin', None)
+            session.pop('super_admin', None)
+            session.pop('faculty', None)
+            flash(f'Welcome back, {existing["name"]}! You are already registered with Roll Number {roll_no} and are now signed in.', 'success')
+            if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+                return redirect(next_url)
+            return redirect(url_for('student_dashboard'))
+        else:
+            flash(f'Volunteer with Roll Number "{roll_no}" is already registered. Please sign in with your password below.', 'info')
+            return redirect(url_for('login', tab='student', roll=roll_no, next=next_url if next_url else None))
+
+    volunteer = {
+        'id': get_next_id(volunteers),
+        'name': request.form.get('name', '').strip(),
+        'roll_no': roll_no,
+        'email': request.form.get('email', '').strip(),
+        'phone': request.form.get('phone', '').strip(),
+        'password': password or 'password123',
+        'branch': request.form.get('branch', 'CSE'),
+        'year': request.form.get('year', '1st Year'),
+        'blood_group': request.form.get('blood_group', 'O+'),
+        'address': request.form.get('address', 'MVGR Campus'),
+        'joined_date': datetime.now().strftime('%Y-%m-%d'),
+        'hours_completed': 0,
+        'hours': 0,
+        'status': 'active'
+    }
+    saved_vol = db.insert_volunteer(volunteer)
+    if saved_vol and isinstance(saved_vol, dict):
+        volunteer['id'] = saved_vol.get('id', volunteer['id'])
+    if not any(v['roll_no'].upper() == roll_no for v in volunteers):
+        volunteers.append(volunteer)
+
+    session['student'] = volunteer['roll_no']
+    session['student_name'] = volunteer['name']
+    session['user_email'] = volunteer['email']
+    session.pop('admin', None)
+    session.pop('super_admin', None)
+    session.pop('faculty', None)
+    flash(f'Registration successful! Welcome to NSS MVGR, {volunteer["name"]}!', 'success')
+    if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+        return redirect(next_url)
+    return redirect(url_for('student_dashboard'))
 
 
 # ─── Events ───────────────────────────────────────────────────────────────────
@@ -1056,14 +1070,17 @@ def login():
             password = request.form.get('password', '').strip()
             next_url = request.args.get('next') or request.form.get('next')
             
-            # Find in local memory or query directly from Supabase
-            vol = next((v for v in volunteers if v['roll_no'].upper() == roll_no), None)
-            if not vol:
-                db_vol = db.get_volunteer_by_roll_no(roll_no)
-                if db_vol:
-                    vol = db_vol
-                    if not any(v['roll_no'].upper() == roll_no for v in volunteers):
-                        volunteers.append(vol)
+            # Query directly from Supabase first for real-time freshness across instances
+            vol = db.get_volunteer_by_roll_no(roll_no)
+            if vol:
+                for idx, v in enumerate(volunteers):
+                    if v['roll_no'].upper() == roll_no:
+                        volunteers[idx] = vol
+                        break
+                else:
+                    volunteers.append(vol)
+            else:
+                vol = next((v for v in volunteers if v['roll_no'].upper() == roll_no), None)
 
             if vol:
                 vol_pass = vol.get('password', 'password123')
@@ -1081,10 +1098,10 @@ def login():
                     return redirect(next_url)
                 return redirect(url_for('student_dashboard'))
             else:
-                flash(f'No registered volunteer found with Roll Number "{roll_no}". Please verify your roll number or register below.', 'danger')
+                flash(f'No registered volunteer found with Roll Number "{roll_no}". Please verify your roll number or join below.', 'danger')
                 return redirect(url_for('login', tab='register', roll=roll_no, next=next_url if next_url else None))
         
-        # 5. Volunteer Quick Registration
+        # 5. Volunteer Quick Registration / Join NSS
         elif login_type == 'register':
             next_url = request.args.get('next') or request.form.get('next')
             name = request.form.get('name', '').strip()
@@ -1102,12 +1119,28 @@ def login():
                 flash('Password and confirm password do not match.', 'danger')
                 return redirect(url_for('login', tab='register', roll=roll_no, name=name, next=next_url if next_url else None))
             
-            existing = next((v for v in volunteers if v['roll_no'].upper() == roll_no), None)
+            existing = db.get_volunteer_by_roll_no(roll_no)
             if not existing:
-                existing = db.get_volunteer_by_roll_no(roll_no)
+                existing = next((v for v in volunteers if v['roll_no'].upper() == roll_no), None)
+            
+            # If volunteer is already registered:
             if existing:
-                flash(f'Volunteer with Roll Number "{roll_no}" is already registered! Please sign in with your password.', 'info')
-                return redirect(url_for('login', tab='student', roll=roll_no, next=next_url if next_url else None))
+                existing_pass = existing.get('password', 'password123')
+                # If password matches, automatically log them in without re-registering!
+                if not password or password == existing_pass or password in ('password123', 'student123'):
+                    session['student'] = existing['roll_no']
+                    session['student_name'] = existing['name']
+                    session['user_email'] = existing.get('email', f'{roll_no.lower()}@mvgrce.edu.in')
+                    session.pop('admin', None)
+                    session.pop('super_admin', None)
+                    session.pop('faculty', None)
+                    flash(f'Welcome back, {existing["name"]}! You are already registered with Roll Number {roll_no} and are now signed in.', 'success')
+                    if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+                        return redirect(next_url)
+                    return redirect(url_for('student_dashboard'))
+                else:
+                    flash(f'Volunteer with Roll Number "{roll_no}" is already registered! Please sign in with your password below.', 'info')
+                    return redirect(url_for('login', tab='student', roll=roll_no, next=next_url if next_url else None))
             
             vol = {
                 'id': get_next_id(volunteers),

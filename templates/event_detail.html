@@ -76,7 +76,7 @@
                                 <a href="{{ url_for('login', tab='student', next=url_for('event_detail', event_id=event.id)) }}" class="btn btn-primary">
                                     <i class="fas fa-sign-in-alt"></i> Sign In to Register
                                 </a>
-                                <a href="{{ url_for('register', next=url_for('event_detail', event_id=event.id)) }}" class="btn btn-outline" style="color: var(--mvgr-gold); border-color: var(--mvgr-gold);">
+                                <a href="{{ url_for('login', tab='register', next=url_for('event_detail', event_id=event.id)) }}" class="btn btn-outline" style="color: var(--mvgr-gold); border-color: var(--mvgr-gold);">
                                     <i class="fas fa-user-plus"></i> New Volunteer? Join NSS
                                 </a>
                             </div>
