@@ -530,6 +530,9 @@ def register():
         session.pop('super_admin', None)
         session.pop('faculty', None)
         flash(f'Registration successful! Welcome to NSS MVGR, {volunteer["name"]}!', 'success')
+        next_url = request.args.get('next') or request.form.get('next')
+        if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+            return redirect(next_url)
         return redirect(url_for('student_dashboard'))
     return render_template('register.html')
 
@@ -667,22 +670,37 @@ def event_detail(event_id):
 
 @app.route('/events/<int:event_id>/register', methods=['POST'])
 def register_for_event(event_id):
+    if not session.get('student'):
+        flash('Please sign in to your student account to register for events.', 'warning')
+        return redirect(url_for('login', tab='student', next=url_for('event_detail', event_id=event_id)))
+
     event = next((e for e in events if e['id'] == event_id), None)
-    roll_no = request.form.get('roll_no', '').strip()
-    volunteer = next((v for v in volunteers if v['roll_no'] == roll_no), None)
+    roll_no = session.get('student', '').strip().upper()
+    volunteer = next((v for v in volunteers if v['roll_no'].upper() == roll_no), None)
+    if not volunteer:
+        volunteer = db.get_volunteer_by_roll_no(roll_no)
+        if volunteer and not any(v['roll_no'].upper() == roll_no for v in volunteers):
+            volunteers.append(volunteer)
 
     if not event:
         flash('Event not found.', 'danger')
     elif not volunteer:
-        flash('Volunteer not found. Please register as a volunteer first.', 'danger')
-    elif roll_no in event['registered_volunteers']:
+        flash('Volunteer record not found. Please log in again.', 'danger')
+        return redirect(url_for('login', tab='student', next=url_for('event_detail', event_id=event_id)))
+    elif roll_no in event.get('registered_volunteers', []):
         flash('You are already registered for this event.', 'info')
-    elif len(event['registered_volunteers']) >= event['max_volunteers']:
-        flash('Event is full.', 'danger')
+    elif len(event.get('registered_volunteers', [])) >= event.get('max_volunteers', 0):
+        flash('This event has reached full capacity.', 'danger')
     else:
+        if 'registered_volunteers' not in event:
+            event['registered_volunteers'] = []
         event['registered_volunteers'].append(roll_no)
         db.update_event_record(event_id, {'registered_volunteers': event['registered_volunteers']})
-        flash('Successfully registered for the event!', 'success')
+        flash(f'Successfully registered for "{event["title"]}"!', 'success')
+
+    ref = request.referrer
+    if ref and 'student/dashboard' in ref:
+        return redirect(url_for('student_dashboard') + '#events')
     return redirect(url_for('event_detail', event_id=event_id))
 
 
@@ -1036,6 +1054,7 @@ def login():
         elif login_type == 'student':
             roll_no = request.form.get('roll_no', '').strip().upper()
             password = request.form.get('password', '').strip()
+            next_url = request.args.get('next') or request.form.get('next')
             
             # Find in local memory or query directly from Supabase
             vol = next((v for v in volunteers if v['roll_no'].upper() == roll_no), None)
@@ -1050,7 +1069,7 @@ def login():
                 vol_pass = vol.get('password', 'password123')
                 if password and password != vol_pass and password not in ('password123', 'student123'):
                     flash('Invalid student password. Please enter your correct password.', 'danger')
-                    return redirect(url_for('login', tab='student', roll=roll_no))
+                    return redirect(url_for('login', tab='student', roll=roll_no, next=next_url if next_url else None))
                 session['student'] = vol['roll_no']
                 session['student_name'] = vol['name']
                 session['user_email'] = vol.get('email', f'{roll_no.lower()}@mvgrce.edu.in')
@@ -1058,13 +1077,16 @@ def login():
                 session.pop('super_admin', None)
                 session.pop('faculty', None)
                 flash(f'Welcome back, {vol["name"]}! Logged in to Student User Mode.', 'success')
+                if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+                    return redirect(next_url)
                 return redirect(url_for('student_dashboard'))
             else:
                 flash(f'No registered volunteer found with Roll Number "{roll_no}". Please verify your roll number or register below.', 'danger')
-                return redirect(url_for('login', tab='register', roll=roll_no))
+                return redirect(url_for('login', tab='register', roll=roll_no, next=next_url if next_url else None))
         
         # 5. Volunteer Quick Registration
         elif login_type == 'register':
+            next_url = request.args.get('next') or request.form.get('next')
             name = request.form.get('name', '').strip()
             roll_no = request.form.get('roll_no', '').strip().upper()
             email = request.form.get('email', '').strip()
@@ -1078,14 +1100,14 @@ def login():
 
             if confirm_password and password != confirm_password:
                 flash('Password and confirm password do not match.', 'danger')
-                return redirect(url_for('login', tab='register', roll=roll_no, name=name))
+                return redirect(url_for('login', tab='register', roll=roll_no, name=name, next=next_url if next_url else None))
             
             existing = next((v for v in volunteers if v['roll_no'].upper() == roll_no), None)
             if not existing:
                 existing = db.get_volunteer_by_roll_no(roll_no)
             if existing:
                 flash(f'Volunteer with Roll Number "{roll_no}" is already registered! Please sign in with your password.', 'info')
-                return redirect(url_for('login', tab='student', roll=roll_no))
+                return redirect(url_for('login', tab='student', roll=roll_no, next=next_url if next_url else None))
             
             vol = {
                 'id': get_next_id(volunteers),
@@ -1116,6 +1138,8 @@ def login():
             session.pop('super_admin', None)
             session.pop('faculty', None)
             flash(f'Registration successful! Welcome to NSS MVGR, {name}!', 'success')
+            if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+                return redirect(next_url)
             return redirect(url_for('student_dashboard'))
             
     return render_template('login.html', active_tab=tab)

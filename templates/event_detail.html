@@ -32,18 +32,56 @@
                 </div>
 
                 {% if event.status == 'upcoming' %}
-                <div class="register-event-card">
-                    <h3><i class="fas fa-user-plus"></i> Register for this Event</h3>
-                    <p>Enter your roll number to register. You must be a registered volunteer.</p>
-                    <form method="POST" action="{{ url_for('register_for_event', event_id=event.id) }}">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <input type="text" name="roll_no" placeholder="Enter your Roll Number" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Register</button>
+                    {% if session.get('student') %}
+                        {% if session.get('student') in event.registered_volunteers %}
+                        <div class="register-event-card" style="background: #e8f5e9; border: 1.5px solid #a5d6a7; border-radius: 10px; padding: 22px;">
+                            <h3 style="color: #2e7d32; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <i class="fas fa-check-circle"></i> You are Registered!
+                            </h3>
+                            <p style="color: #1b5e20; margin-bottom: 0; font-size: 14.5px;">
+                                You are officially enrolled for this drive with Roll Number <strong>{{ session.get('student') }}</strong>. Please report to the venue on time.
+                            </p>
                         </div>
-                    </form>
-                </div>
+                        {% elif event.registered_volunteers | length >= event.max_volunteers %}
+                        <div class="register-event-card" style="background: #fff8e1; border: 1.5px solid #ffe082; border-radius: 10px; padding: 22px;">
+                            <h3 style="color: #f57f17; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <i class="fas fa-exclamation-circle"></i> Registration Full
+                            </h3>
+                            <p style="color: #e65100; margin-bottom: 0; font-size: 14.5px;">
+                                This event has reached its maximum volunteer capacity ({{ event.max_volunteers }} volunteers).
+                            </p>
+                        </div>
+                        {% else %}
+                        <div class="register-event-card" style="border-radius: 10px; padding: 22px;">
+                            <h3 style="color: var(--nss-blue);"><i class="fas fa-user-plus"></i> Register for this Event</h3>
+                            <p style="color: #555; margin-bottom: 16px;">
+                                Enrolling as <strong>{{ session.get('student_name', session.get('student')) }}</strong> (<code>{{ session.get('student') }}</code>).
+                            </p>
+                            <form method="POST" action="{{ url_for('register_for_event', event_id=event.id) }}">
+                                <button type="submit" class="btn btn-primary" style="padding: 10px 22px; font-size: 14px;">
+                                    <i class="fas fa-check"></i> Confirm & Enroll Now
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="register-event-card" style="background: #fffdf7; border: 1.5px solid var(--mvgr-gold); border-radius: 10px; padding: 22px;">
+                            <h3 style="color: #18191c; display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fas fa-lock" style="color: var(--mvgr-gold);"></i> Student Login Required
+                            </h3>
+                            <p style="color: #555; font-size: 14px; line-height: 1.6; margin-bottom: 18px;">
+                                You must be signed in to your MVGR NSS Student account to register for this event and earn service hours.
+                            </p>
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                                <a href="{{ url_for('login', tab='student', next=url_for('event_detail', event_id=event.id)) }}" class="btn btn-primary">
+                                    <i class="fas fa-sign-in-alt"></i> Sign In to Register
+                                </a>
+                                <a href="{{ url_for('register', next=url_for('event_detail', event_id=event.id)) }}" class="btn btn-outline" style="color: var(--mvgr-gold); border-color: var(--mvgr-gold);">
+                                    <i class="fas fa-user-plus"></i> New Volunteer? Join NSS
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
                 {% endif %}
             </div>
 

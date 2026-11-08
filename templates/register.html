@@ -19,6 +19,9 @@
                 <p>Fill in your details below to become an NSS volunteer</p>
             </div>
             <form method="POST" action="{{ url_for('register') }}" class="register-form" novalidate>
+                {% if request.args.get('next') or request.form.get('next') %}
+                <input type="hidden" name="next" value="{{ request.args.get('next', request.form.get('next', '')) }}">
+                {% endif %}
                 <div class="form-section-title">Personal Information</div>
                 <div class="form-row">
                     <div class="form-group">

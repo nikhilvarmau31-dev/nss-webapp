@@ -36,6 +36,9 @@
                 </div>
                 <form method="POST" action="{{ url_for('login') }}">
                     <input type="hidden" name="login_type" value="student">
+                    {% if request.args.get('next') or request.form.get('next') %}
+                    <input type="hidden" name="next" value="{{ request.args.get('next', request.form.get('next', '')) }}">
+                    {% endif %}
                     <div class="modern-input-group">
                         <span class="input-icon"><i class="far fa-user"></i></span>
                         <input type="text" name="roll_no" class="modern-input" placeholder="Roll Number (e.g. 21331A0501)" required autocomplete="username" value="{{ request.args.get('roll', '') }}">
@@ -86,6 +89,9 @@
                 </div>
                 <form method="POST" action="{{ url_for('login') }}">
                     <input type="hidden" name="login_type" value="register">
+                    {% if request.args.get('next') or request.form.get('next') %}
+                    <input type="hidden" name="next" value="{{ request.args.get('next', request.form.get('next', '')) }}">
+                    {% endif %}
                     <div class="modern-input-group">
                         <span class="input-icon"><i class="far fa-user"></i></span>
                         <input type="text" name="name" class="modern-input" placeholder="Full Name" required value="{{ request.args.get('name', '') }}">
