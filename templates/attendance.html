@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Attendance Management{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div class="container"><h1>Attendance Management</h1>
+    <nav class="breadcrumb"><a href="/">Home</a> <i class="fas fa-chevron-right"></i> Attendance</nav></div>
+</section>
+<section class="section">
+    <div class="container">
+        <!-- Event Selector -->
+        <div class="attendance-selector">
+            <h3>Select an Event to Mark Attendance</h3>
+            <form method="GET" action="{{ url_for('attendance') }}">
+                <div class="form-row">
+                    <div class="form-group">
+                        <select name="event_id" required>
+                            <option value="">-- Select Event --</option>
+                            {% for event in events %}
+                            <option value="{{ event.id }}" data-hours="{{ event.hours }}" {% if selected_event and selected_event.id == event.id %}selected{% endif %}>{{ event.title }} ({{ event.date }}) — Credit: {{ event.hours }} Hours</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Load Volunteers</button>
+                </div>
+            </form>
+        </div>
+
+        {% if selected_event %}
+        <div class="attendance-form-section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                <h3 style="margin:0;"><i class="fas fa-clipboard-check"></i> Mark Attendance: {{ selected_event.title }}</h3>
+                <span class="badge" style="background:#af8d44; color:#fff; font-size:14px; padding:6px 14px; border-radius:20px;">
+                    <i class="fas fa-clock"></i> {{ selected_event.hours }} Hours Standard Credit
+                </span>
+            </div>
+
+            <!-- Prominent Hours Banner Display -->
+            <div class="attendance-hours-highlight-card">
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <div style="width:48px; height:48px; border-radius:50%; background:#af8d44; color:#fff; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:11.5px; text-transform:uppercase; letter-spacing:0.8px; color:#8c1d24; font-weight:700;">Volunteer Service Credit</div>
+                        <div style="font-size:18px; font-weight:800; color:#18191c;">
+                            <span id="creditHoursDisplay">{{ selected_event.hours }}</span> Service Hours per Present Volunteer
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if event_volunteers %}
+            <form method="POST" action="{{ url_for('attendance') }}">
+                <input type="hidden" name="event_id" value="{{ selected_event.id }}">
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:12px 18px; border-radius:8px; margin-bottom:16px; border:1px solid #e2e8f0; flex-wrap:wrap; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <label style="font-size:14px; font-weight:700; color:#222; margin:0;"><i class="fas fa-stopwatch gold-icon"></i> Hours to Credit Each Volunteer:</label>
+                        <input type="number" name="hours_to_credit" id="hoursToCredit" value="{{ selected_event.hours }}" min="1" max="24" class="form-control" style="width:90px; text-align:center; font-weight:800; font-size:16px; border:2px solid #af8d44; border-radius:6px; padding:6px 10px;" oninput="document.getElementById('creditHoursDisplay').textContent = this.value || 0;">
+                        <span style="font-size:13px; color:#666;">hours</span>
+                    </div>
+                    <div class="attendance-controls" style="margin:0;">
+                        <button type="button" class="btn btn-sm btn-outline" onclick="checkAll(true)">Select All</button>
+                        <button type="button" class="btn btn-sm btn-outline" onclick="checkAll(false)">Deselect All</button>
+                    </div>
+                </div>
+                <div class="attendance-table-wrapper">
+                    <table class="table">
+                        <thead><tr><th>Present</th><th>Name</th><th>Roll No.</th><th>Branch</th><th>Year</th></tr></thead>
+                        <tbody>
+                            {% for vol in event_volunteers %}
+                            <tr>
+                                <td><input type="checkbox" name="present" value="{{ vol.roll_no }}" class="attendance-check"></td>
+                                <td>{{ vol.name }}</td>
+                                <td><strong>{{ vol.roll_no }}</strong></td>
+                                <td>{{ vol.branch }}</td>
+                                <td>{{ vol.year }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Attendance</button>
+            </form>
+            {% else %}
+            <div class="empty-state"><i class="fas fa-users-slash"></i><p>No volunteers registered for this event.</p></div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Attendance Records -->
+        {% if attendance_records %}
+        <div class="attendance-records">
+            <h3><i class="fas fa-history"></i> Attendance Records</h3>
+            <table class="table">
+                <thead><tr><th>#</th><th>Event</th><th>Date</th><th>Present Count</th><th>Hours</th></tr></thead>
+                <tbody>
+                    {% for record in attendance_records %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ record.event_title }}</td>
+                        <td>{{ record.date }}</td>
+                        <td><span class="badge">{{ record.present | length }}</span></td>
+                        <td>{{ record.hours }} hrs</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</section>
+<script>
+function checkAll(state) {
+    document.querySelectorAll('.attendance-check').forEach(cb => cb.checked = state);
+}
+</script>
+{% endblock %}

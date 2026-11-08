@@ -1,0 +1,971 @@
+{% extends "base.html" %}
+{% block title %}Faculty Portal - MVGR NSS Unit{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<div class="portal-dashboard-layout fullscreen-portal" style="margin-top: 0; min-height: 100vh;">
+    <!-- Left Institutional Persistent Sidebar -->
+    <aside class="portal-sidebar">
+        <div class="sidebar-brand-box">
+            <div class="sidebar-crest">
+                <img src="{{ url_for('static', filename='images/mvgr logo.png') }}" alt="MVGR Crest">
+            </div>
+            <div class="sidebar-brand-text">
+                <span class="uni-name">MVGRCE(A)</span>
+                <span class="portal-name">Faculty NSS Console</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <button type="button" class="sidebar-nav-btn active" data-tab="overview" onclick="switchFacultyPanel('overview')">
+                <span class="link-icon"><i class="fas fa-th-large"></i></span>
+                <span class="link-text">Dashboard</span>
+            </button>
+            <button type="button" class="sidebar-nav-btn" data-tab="volunteers" onclick="switchFacultyPanel('volunteers')">
+                <span class="link-icon"><i class="fas fa-users"></i></span>
+                <span class="link-text">Registered Volunteers</span>
+            </button>
+            <button type="button" class="sidebar-nav-btn" data-tab="contributions" onclick="switchFacultyPanel('contributions')">
+                <span class="link-icon"><i class="fas fa-history"></i></span>
+                <span class="link-text">My Contributions</span>
+            </button>
+            <button type="button" class="sidebar-nav-btn" data-tab="attendance" onclick="switchFacultyPanel('attendance')">
+                <span class="link-icon"><i class="fas fa-clipboard-check"></i></span>
+                <span class="link-text">Mark Attendance</span>
+            </button>
+            <button type="button" class="sidebar-nav-btn" data-tab="events" onclick="switchFacultyPanel('events')">
+                <span class="link-icon"><i class="fas fa-calendar-plus"></i></span>
+                <span class="link-text">Schedule Drive</span>
+            </button>
+            <button type="button" class="sidebar-nav-btn" data-tab="news" onclick="switchFacultyPanel('news')">
+                <span class="link-icon"><i class="fas fa-bullhorn"></i></span>
+                <span class="link-text">Publish Circular</span>
+            </button>
+            <a href="javascript:void(0)" onclick="openPasswordModal()" class="sidebar-nav-btn" style="text-decoration:none;">
+                <span class="link-icon"><i class="fas fa-key"></i></span>
+                <span class="link-text">Change Password</span>
+            </a>
+            <a href="{{ url_for('home') }}" class="sidebar-nav-btn" style="text-decoration:none;">
+                <span class="link-icon"><i class="fas fa-globe"></i></span>
+                <span class="link-text">Main Website</span>
+            </a>
+            <a href="{{ url_for('faculty_logout') }}" class="sidebar-nav-btn logout-link" style="text-decoration:none; margin-top:auto;">
+                <span class="link-icon"><i class="fas fa-sign-out-alt"></i></span>
+                <span class="link-text">Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content Area with Persistent Sidebar -->
+    <main class="portal-main-area">
+        <div class="portal-content-container" style="padding-top: 24px;">
+            
+            <!-- ═══════════════════════════════════════════════════════════════
+                 PANEL 1: DASHBOARD OVERVIEW
+                 ═══════════════════════════════════════════════════════════════ -->
+            <section id="panel-overview" class="faculty-panel-section">
+                <div class="welcome-header-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                        <div>
+                            <h1 class="welcome-title">Welcome, {{ fac_name }}</h1>
+                            <p class="welcome-sub">{{ fac_dept }} &bull; NSS Faculty Coordinator</p>
+                            <div class="student-meta-pills">
+                                <span class="meta-pill"><i class="fas fa-university"></i> MVGR College of Engineering (A)</span>
+                                <span class="meta-pill status-active"><i class="fas fa-check-circle"></i> Active Faculty Admin</span>
+                                <span class="meta-pill"><i class="fas fa-history"></i> My Logged Actions: {{ stats.my_actions_count }}</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <button type="button" class="top-bar-pwd-btn" onclick="openPasswordModal()" title="Change Account Password">
+                                <i class="fas fa-key"></i> Password
+                            </button>
+                            <a href="{{ url_for('faculty_logout') }}" class="top-bar-logout-btn" title="Logout">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3 Highlight Metric Cards -->
+                <div class="portal-stats-row">
+                    <div class="modern-stat-box" style="cursor:pointer;" onclick="switchFacultyPanel('volunteers')">
+                        <div class="stat-icon-wrap blue">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-meta">
+                            <span class="stat-number">{{ stats.total_volunteers }}</span>
+                            <span class="stat-label">Registered Volunteers (View &rarr;)</span>
+                        </div>
+                    </div>
+
+                    <div class="modern-stat-box" style="cursor:pointer;" onclick="switchFacultyPanel('events')">
+                        <div class="stat-icon-wrap gold">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-meta">
+                            <span class="stat-number">{{ stats.total_events }}</span>
+                            <span class="stat-label">Active Drives & Events (View &rarr;)</span>
+                        </div>
+                    </div>
+
+                    <div class="modern-stat-box" style="cursor:pointer;" onclick="switchFacultyPanel('contributions')">
+                        <div class="stat-icon-wrap green">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        <div class="stat-meta">
+                            <span class="stat-number">{{ stats.my_actions_count }}</span>
+                            <span class="stat-label">My Logged Contributions (View &rarr;)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Action Cards -->
+                <div class="portal-stats-row mb-2">
+                    <div class="modern-stat-box" style="cursor:pointer;" onclick="switchFacultyPanel('attendance')">
+                        <div class="stat-icon-wrap green">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div class="stat-meta">
+                            <span class="stat-number" style="font-size:17px;">Mark Attendance</span>
+                            <span class="stat-label">Verify volunteer hours for drives</span>
+                        </div>
+                    </div>
+
+                    <div class="modern-stat-box" style="cursor:pointer;" onclick="switchFacultyPanel('events')">
+                        <div class="stat-icon-wrap gold">
+                            <i class="fas fa-calendar-plus"></i>
+                        </div>
+                        <div class="stat-meta">
+                            <span class="stat-number" style="font-size:17px;">Schedule Drive</span>
+                            <span class="stat-label">Create campus / village activities</span>
+                        </div>
+                    </div>
+
+                    <div class="modern-stat-box" style="cursor:pointer;" onclick="switchFacultyPanel('news')">
+                        <div class="stat-icon-wrap blue">
+                            <i class="fas fa-bullhorn"></i>
+                        </div>
+                        <div class="stat-meta">
+                            <span class="stat-number" style="font-size:17px;">Publish Circular</span>
+                            <span class="stat-label">Post official notices for volunteers</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Overview Tables -->
+                <div class="portal-split-grid">
+                    <div class="portal-panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-users gold-icon"></i> Recently Registered Volunteers</h3>
+                            <button type="button" class="btn-card-outline" onclick="switchFacultyPanel('volunteers')">All Volunteers &rarr;</button>
+                        </div>
+                        <div class="panel-body p-0">
+                            <table class="portal-modern-table">
+                                <thead>
+                                    <tr><th>Name</th><th>Roll Number</th><th>Branch</th><th>Credits</th></tr>
+                                </thead>
+                                <tbody>
+                                    {% for vol in volunteers[-5:] | reverse %}
+                                    <tr>
+                                        <td class="fw-600">{{ vol.name }}</td>
+                                        <td><code>{{ vol.roll_no }}</code></td>
+                                        <td>{{ vol.branch }}</td>
+                                        <td><span class="credit-pill">{{ vol.hours_completed }} hrs</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="portal-panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-history gold-icon"></i> My Recent Contributions</h3>
+                            <button type="button" class="btn-card-outline" onclick="switchFacultyPanel('contributions')">Full History &rarr;</button>
+                        </div>
+                        <div class="panel-body p-0">
+                            {% if my_actions %}
+                            <table class="portal-modern-table">
+                                <thead>
+                                    <tr><th>Action</th><th>Target</th><th>Time</th></tr>
+                                </thead>
+                                <tbody>
+                                    {% for act in my_actions[:5] %}
+                                    {% if 'login' not in act.action_type|lower and 'logout' not in act.action_type|lower %}
+                                    <tr>
+                                        <td><span class="status-verified-pill">{{ act.action_type }}</span></td>
+                                        <td class="fw-600" style="font-size:13px;">{{ act.target }}</td>
+                                        <td style="font-size:12px; color:#888;">{{ act.timestamp }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <div class="empty-portal-state">
+                                <i class="fas fa-clipboard-check"></i>
+                                <p>No actions logged yet. When you mark attendance or schedule drives, your contributions will appear here.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 PANEL 2: REGISTERED VOLUNTEERS DIRECTORY
+                 ═══════════════════════════════════════════════════════════════ -->
+            <section id="panel-volunteers" class="faculty-panel-section" style="display:none;">
+                <div class="portal-panel full-width">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fas fa-users gold-icon"></i> Registered NSS Volunteers</h3>
+                            <p style="font-size:13px; color:#777; margin-top:4px;">Directory of all registered student volunteers in MVGR NSS Unit.</p>
+                        </div>
+                        <span class="panel-counter">Total: {{ volunteers|length }} Volunteers</span>
+                    </div>
+
+                    <div class="panel-body">
+                        <!-- Real-time Search & Filter Bar -->
+                        <div class="volunteers-search-bar">
+                            <input type="text" id="volunteerSearchInput" class="volunteers-search-input" placeholder="Search volunteer by name, roll number, or branch..." onkeyup="filterVolunteersTable()">
+                            <div class="branch-filters-row">
+                                <button type="button" class="branch-pill-btn active" onclick="filterByBranch('ALL', this)">All Branches</button>
+                                <button type="button" class="branch-pill-btn" onclick="filterByBranch('CSE', this)">CSE</button>
+                                <button type="button" class="branch-pill-btn" onclick="filterByBranch('ECE', this)">ECE</button>
+                                <button type="button" class="branch-pill-btn" onclick="filterByBranch('EEE', this)">EEE</button>
+                                <button type="button" class="branch-pill-btn" onclick="filterByBranch('MECH', this)">MECH</button>
+                                <button type="button" class="branch-pill-btn" onclick="filterByBranch('CIVIL', this)">CIVIL</button>
+                                <button type="button" class="branch-pill-btn" onclick="filterByBranch('CHEM', this)">CHEM</button>
+                                <button type="button" class="branch-pill-btn" onclick="filterByBranch('IE&CT', this)">IE&CT</button>
+                                <button type="button" class="branch-pill-btn" onclick="filterByBranch('DE', this)">DE</button>
+                            </div>
+                        </div>
+
+                        <!-- Full Volunteers Table -->
+                        <div class="table-responsive">
+                            <table class="portal-modern-table" id="volunteersDirectoryTable">
+                                <thead>
+                                    <tr>
+                                        <th>Student Name</th>
+                                        <th>Roll Number</th>
+                                        <th>Branch</th>
+                                        <th>Year</th>
+                                        <th>Contact Phone</th>
+                                        <th>Blood Group</th>
+                                        <th>Hours Completed</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for vol in volunteers %}
+                                    <tr class="vol-row" data-branch="{{ vol.branch }}">
+                                        <td class="fw-600">
+                                            <div style="display:flex; align-items:center; gap:8px;">
+                                                <span style="width:28px; height:28px; border-radius:50%; background:rgba(175,141,68,0.15); color:var(--mvgr-gold); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px;">
+                                                    {{ vol.name[0] }}
+                                                </span>
+                                                {{ vol.name }}
+                                            </div>
+                                        </td>
+                                        <td><code style="background:#f0f2f5; padding:3px 8px; border-radius:4px; font-weight:600; color:#18191c;">{{ vol.roll_no }}</code></td>
+                                        <td><span class="vol-branch-badge">{{ vol.branch }}</span></td>
+                                        <td>{{ vol.year }}</td>
+                                        <td><i class="fas fa-phone-alt" style="color:#888; font-size:11px;"></i> {{ vol.phone }}</td>
+                                        <td><span style="color:#8c1d24; font-weight:700;">{{ vol.blood_group }}</span></td>
+                                        <td><span class="credit-pill">{{ vol.hours_completed }} hrs</span></td>
+                                        <td><span class="status-verified-pill" style="background:#e8f5e9; color:#2e7d32;"><i class="fas fa-check-circle"></i> {{ vol.status|capitalize }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 PANEL 3: MY CONTRIBUTIONS LOG (FACULTY'S OWN ACTIONS)
+                 ═══════════════════════════════════════════════════════════════ -->
+            <section id="panel-contributions" class="faculty-panel-section" style="display:none;">
+                <div class="portal-panel full-width">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fas fa-clipboard-list gold-icon"></i> My Contributions & Actions History</h3>
+                            <p style="font-size:13px; color:#777; margin-top:4px;">Logged record of all community service verifications, drives scheduled, and approvals performed by {{ fac_name }}.</p>
+                        </div>
+                        <span class="panel-counter">Total: {{ my_actions|length }} Logged Actions</span>
+                    </div>
+
+                    <div class="panel-body">
+                        {% if my_actions %}
+                        <div class="table-responsive">
+                            <table class="portal-modern-table">
+                                <thead>
+                                    <tr>
+                                        <th>Action Type</th>
+                                        <th>Target / Activity</th>
+                                        <th>Details & Hours Impact</th>
+                                        <th>Timestamp</th>
+                                        <th>Audit Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in my_actions %}
+                                    {% if 'login' not in log.action_type|lower and 'logout' not in log.action_type|lower %}
+                                    <tr>
+                                        <td>
+                                            <span class="status-verified-pill" style="{% if 'Attendance' in log.action_type %}background:#e8f5e9; color:#2e7d32;{% elif 'Event' in log.action_type %}background:#fef7e0; color:#b78103;{% else %}background:#e3f2fd; color:#1565c0;{% endif %}">
+                                                {{ log.action_type }}
+                                            </span>
+                                        </td>
+                                        <td class="fw-600">{{ log.target }}</td>
+                                        <td style="font-size:13.5px; color:#444;">{{ log.description }}</td>
+                                        <td style="font-size:12px; color:#888;"><i class="far fa-clock"></i> {{ log.timestamp }}</td>
+                                        <td><span class="status-verified-pill" style="background:#e8f5e9; color:#2e7d32;"><i class="fas fa-check-double"></i> Recorded</span></td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-portal-state">
+                            <i class="fas fa-clipboard-list"></i>
+                            <h4>No Contributions Recorded Yet</h4>
+                            <p>When you mark attendance for volunteers, schedule events, or publish circulars, your contribution records will be displayed here.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 PANEL 4: MARK ATTENDANCE
+                 ═══════════════════════════════════════════════════════════════ -->
+            <section id="panel-attendance" class="faculty-panel-section" style="display:none;">
+                <div class="portal-panel full-width">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fas fa-clipboard-check gold-icon"></i> Verify & Mark Volunteer Attendance</h3>
+                            <p style="font-size:13px; color:#777; margin-top:4px;">Award service credit hours to participating NSS volunteers.</p>
+                        </div>
+                    </div>
+
+                    <div class="panel-body">
+                        <form method="POST" action="{{ url_for('attendance') }}">
+                            <!-- Prominent Golden Service Hours Banner -->
+                            <div class="attendance-hours-highlight-card">
+                                <div style="display:flex; align-items:center; gap:14px;">
+                                    <div style="width:48px; height:48px; border-radius:50%; background:#af8d44; color:#fff; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">
+                                        <i class="fas fa-award"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:11.5px; text-transform:uppercase; letter-spacing:0.8px; color:#8c1d24; font-weight:700;">Service Hours Credit Award</div>
+                                        <div style="font-size:18px; font-weight:800; color:#18191c;">
+                                            <span id="facultyAttendanceHoursBadge">{{ events[0].hours if events else 4 }}</span> Service Hours per Present Volunteer
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <label style="font-size:13px; font-weight:600; color:#444; margin:0;">Hours to Credit:</label>
+                                    <input type="number" name="hours_to_credit" id="facultyHoursInput" value="{{ events[0].hours if events else 4 }}" min="1" max="24" class="form-control" style="width:85px; text-align:center; font-weight:800; font-size:16px; border:2px solid #af8d44; border-radius:6px; padding:6px 10px;" oninput="document.getElementById('facultyAttendanceHoursBadge').textContent = this.value || 0; document.getElementById('eventHoursDisplay').value = (this.value || 0) + ' Hours';">
+                                    <span style="font-size:13px; color:#666;">hours</span>
+                                </div>
+                            </div>
+
+                            <div class="dashboard-form-grid mb-2">
+                                <div class="form-input-box">
+                                    <label><i class="fas fa-calendar-alt"></i> Select Event / Drive *</label>
+                                    <select name="event_id" class="form-control" required onchange="updateAttendanceHours(this)">
+                                        {% for ev in events %}
+                                        <option value="{{ ev.id }}" data-hours="{{ ev.hours }}">{{ ev.title }} ({{ ev.date }}) &bull; {{ ev.hours }} hrs</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-input-box">
+                                    <label><i class="fas fa-clock"></i> Selected Event Base Hours</label>
+                                    <input type="text" id="eventHoursDisplay" value="{{ events[0].hours if events else 4 }} Hours" readonly style="background:#f8f9fa; font-weight:600;">
+                                </div>
+                            </div>
+
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin:18px 0 12px;">
+                                <h4 style="font-size:15px; font-weight:700; color:#18191c;">Select Present Volunteers:</h4>
+                                <button type="button" class="branch-pill-btn" onclick="toggleAllAttendanceChecks()">Select / Unselect All</button>
+                            </div>
+
+                            <div style="max-height:360px; overflow-y:auto; border:1px solid #ebe7de; border-radius:8px; padding:12px; background:#fafafa; margin-bottom:20px;">
+                                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:10px;">
+                                    {% for vol in volunteers %}
+                                    <label style="display:flex; align-items:center; gap:10px; background:#ffffff; padding:10px 14px; border-radius:6px; border:1px solid #e5e0d8; cursor:pointer;">
+                                        <input type="checkbox" name="present" value="{{ vol.roll_no }}" class="attendance-chk" checked style="width:18px; height:18px; accent-color:#af8d44;">
+                                        <div>
+                                            <strong style="display:block; font-size:13.5px; color:#18191c;">{{ vol.name }}</strong>
+                                            <span style="font-size:11.5px; color:#666;">{{ vol.roll_no }} &bull; {{ vol.branch }}</span>
+                                        </div>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-portal-gold" style="padding:12px 28px; font-size:15px;">
+                                <i class="fas fa-check-circle"></i> Save Attendance & Record Contribution &rarr;
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Recorded Attendance Records & Management -->
+                <div class="portal-panel full-width mt-2">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fas fa-history gold-icon"></i> Recorded Attendance Sessions</h3>
+                            <p style="font-size:13px; color:#777; margin-top:4px;">Manage, edit volunteer attendance lists, or delete attendance records.</p>
+                        </div>
+                        <span class="panel-counter">Total: {{ attendance_records|length }} Records</span>
+                    </div>
+                    <div class="panel-body p-0">
+                        {% if attendance_records %}
+                        <table class="portal-modern-table">
+                            <thead>
+                                <tr><th>#</th><th>Event Title</th><th>Date</th><th>Present Count</th><th>Hours Credited</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for rec in attendance_records %}
+                                <tr>
+                                    <td><strong>#{{ rec.id }}</strong></td>
+                                    <td class="fw-600">{{ rec.event_title }}</td>
+                                    <td>{{ rec.date }}</td>
+                                    <td><span class="vol-branch-badge">{{ rec.present|length }} Volunteers</span></td>
+                                    <td><span class="credit-pill">{{ rec.hours }} hrs</span></td>
+                                    <td>
+                                        <div class="table-action-group">
+                                            <button type="button" class="btn-table-action edit" onclick='openEditAttendanceModal({{ rec|tojson }})'>
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                            <form method="POST" action="{{ url_for('delete_attendance_record', record_id=rec.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this attendance session? The {{ rec.hours }} hours will be deducted from all present volunteers.');">
+                                                <button type="submit" class="btn-table-action delete">
+                                                    <i class="fas fa-trash-alt"></i> Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="empty-portal-state" style="padding:30px;">
+                            <i class="fas fa-clipboard-check"></i>
+                            <h4>No Attendance Records Yet</h4>
+                            <p>Mark attendance for an event above to see records and manage them here.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 PANEL 5: SCHEDULE DRIVE
+                 ═══════════════════════════════════════════════════════════════ -->
+            <section id="panel-events" class="faculty-panel-section" style="display:none;">
+                <div class="portal-panel full-width mb-2">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fas fa-calendar-plus gold-icon"></i> Schedule New NSS Drive</h3>
+                            <p style="font-size:13px; color:#777; margin-top:4px;">Publish a new community service drive to the NSS portal.</p>
+                        </div>
+                    </div>
+
+                    <div class="panel-body">
+                        <form method="POST" action="{{ url_for('add_event') }}">
+                            <input type="hidden" name="organizer" value="{{ fac_name }}">
+                            <div class="dashboard-form-grid mb-2">
+                                <div class="form-input-box">
+                                    <label><i class="fas fa-heading"></i> Event Title *</label>
+                                    <input type="text" name="title" required placeholder="e.g. Mega Blood Donation Drive">
+                                </div>
+                                <div class="form-input-box">
+                                    <label><i class="fas fa-tag"></i> Category *</label>
+                                    <select name="category" required>
+                                        <option value="Health & Hygiene">Health & Hygiene</option>
+                                        <option value="Environment">Environment</option>
+                                        <option value="Education">Education</option>
+                                        <option value="Social Awareness">Social Awareness</option>
+                                        <option value="Disaster Relief">Disaster Relief</option>
+                                    </select>
+                                </div>
+                                <div class="form-input-box">
+                                    <label><i class="fas fa-calendar-day"></i> Date *</label>
+                                    <input type="date" name="date" required>
+                                </div>
+                                <div class="form-input-box">
+                                    <label><i class="fas fa-clock"></i> Time *</label>
+                                    <input type="text" name="time" placeholder="e.g. 09:30 AM – 01:30 PM" required>
+                                </div>
+                                <div class="form-input-box">
+                                    <label><i class="fas fa-map-marker-alt"></i> Venue / Location *</label>
+                                    <input type="text" name="venue" placeholder="e.g. Central Auditorium / Adopted Village" required>
+                                </div>
+                                <div class="form-input-box">
+                                    <label><i class="fas fa-award"></i> Service Hours Credit *</label>
+                                    <input type="number" name="hours" min="1" max="20" value="4" required>
+                                </div>
+                                <div class="form-input-box">
+                                    <label><i class="fas fa-users"></i> Max Quota *</label>
+                                    <input type="number" name="max_volunteers" min="5" max="500" value="50" required placeholder="e.g. 50">
+                                </div>
+                            </div>
+                            <div class="form-input-box mb-2">
+                                <label><i class="fas fa-align-left"></i> Description *</label>
+                                <textarea name="description" rows="3" required placeholder="Describe the purpose, volunteer responsibilities, and guidelines..."></textarea>
+                            </div>
+                            <button type="submit" class="btn-portal-gold" style="padding:12px 28px;">
+                                <i class="fas fa-calendar-check"></i> Schedule Event &rarr;
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Existing Drives List -->
+                <div class="portal-panel full-width">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-calendar-alt gold-icon"></i> Scheduled NSS Drives</h3>
+                        <span class="panel-counter">Total: {{ events|length }} Drives</span>
+                    </div>
+                    <div class="panel-body p-0">
+                        <table class="portal-modern-table">
+                            <thead>
+                                <tr><th>Title</th><th>Category</th><th>Date & Time</th><th>Venue</th><th>Hours</th><th>Max Quota</th><th>Status</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for ev in events %}
+                                <tr>
+                                    <td class="fw-600">{{ ev.title }}</td>
+                                    <td><span class="vol-branch-badge">{{ ev.category }}</span></td>
+                                    <td>{{ ev.date }} &bull; {{ ev.time }}</td>
+                                    <td>{{ ev.venue }}</td>
+                                    <td><span class="credit-pill">{{ ev.hours }} hrs</span></td>
+                                    <td><span class="status-verified-pill" style="background:#eef4fb; color:#1a73e8;"><i class="fas fa-users"></i> {{ ev.registered_volunteers|length }} / {{ ev.max_volunteers or 50 }} seats</span></td>
+                                    <td><span class="status-verified-pill" style="{% if ev.status == 'upcoming' %}background:#fef7e0; color:#b78103;{% endif %}">{{ ev.status|capitalize }}</span></td>
+                                    <td>
+                                        <div class="table-action-group">
+                                            <button type="button" class="btn-table-action edit" onclick='openEditEventModal({{ ev|tojson }})'>
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                            <form method="POST" action="{{ url_for('delete_event', event_id=ev.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete drive \'{{ ev.title }}\'?');">
+                                                <button type="submit" class="btn-table-action delete">
+                                                    <i class="fas fa-trash-alt"></i> Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 PANEL 6: PUBLISH CIRCULAR
+                 ═══════════════════════════════════════════════════════════════ -->
+            <section id="panel-news" class="faculty-panel-section" style="display:none;">
+                <div class="portal-panel full-width mb-2">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fas fa-bullhorn gold-icon"></i> Publish Official Circular</h3>
+                            <p style="font-size:13px; color:#777; margin-top:4px;">Send official updates to volunteer rosters and public portal.</p>
+                        </div>
+                    </div>
+
+                    <div class="panel-body">
+                        <form method="POST" action="{{ url_for('add_news') }}">
+                            <div class="dashboard-form-grid mb-2" style="grid-template-columns: 2fr 1fr 1fr;">
+                                <div class="form-input-box">
+                                    <label><i class="fas fa-heading"></i> Circular Title *</label>
+                                    <input type="text" name="title" required placeholder="e.g. Volunteer Orientation Session Notification">
+                                </div>
+                                <div class="form-input-box">
+                                    <label><i class="fas fa-calendar-day"></i> Circular Date *</label>
+                                    <input type="date" name="date" id="publishCircularDate" required>
+                                </div>
+                                <div class="form-input-box">
+                                    <label><i class="fas fa-tag"></i> Category *</label>
+                                    <select name="category" required>
+                                        <option value="announcement">Announcement</option>
+                                        <option value="update">Drive Update</option>
+                                        <option value="achievement">Achievement & Recognition</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-input-box mb-2">
+                                <label><i class="fas fa-file-alt"></i> Notice Content *</label>
+                                <textarea name="content" rows="4" required placeholder="Write the complete notice or circular text..."></textarea>
+                            </div>
+                            <button type="submit" class="btn-portal-gold" style="padding:12px 28px;">
+                                <i class="fas fa-paper-plane"></i> Publish Circular &rarr;
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Published Circulars List -->
+                <div class="portal-panel full-width">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-newspaper gold-icon"></i> Published Notices</h3>
+                    </div>
+                    <div class="panel-body p-0">
+                        <table class="portal-modern-table">
+                            <thead>
+                                <tr><th>Title</th><th>Category</th><th>Date</th><th>Summary</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for item in news_items %}
+                                <tr>
+                                    <td class="fw-600">{{ item.title }}</td>
+                                    <td><span class="status-verified-pill">{{ item.category|capitalize }}</span></td>
+                                    <td>{{ item.date }}</td>
+                                    <td style="font-size:13px; color:#555;">{{ item.content[:80] }}...</td>
+                                    <td>
+                                        <div class="table-action-group">
+                                            <button type="button" class="btn-table-action edit" onclick='openEditNewsModal({{ item|tojson }})'>
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                            <form method="POST" action="{{ url_for('delete_news', news_id=item.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete notice \'{{ item.title }}\'?');">
+                                                <button type="submit" class="btn-table-action delete">
+                                                    <i class="fas fa-trash-alt"></i> Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MODAL 1: EDIT SCHEDULED DRIVE
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="faculty-edit-modal-backdrop" id="editEventModal">
+    <div class="faculty-edit-modal-card">
+        <div class="pwd-modal-close" onclick="closeEditEventModal()">&times;</div>
+        <div class="pwd-modal-header">
+            <div class="pwd-icon-circle" style="background:rgba(175,141,68,0.15); color:#af8d44;">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <h3>Edit Scheduled Drive</h3>
+            <p>Update drive details and volunteer credit hours.</p>
+        </div>
+        <form id="editEventForm" method="POST" action="">
+            <div class="dashboard-form-grid mb-2">
+                <div class="form-input-box">
+                    <label><i class="fas fa-heading"></i> Event Title *</label>
+                    <input type="text" name="title" id="editEventTitle" required>
+                </div>
+                <div class="form-input-box">
+                    <label><i class="fas fa-tag"></i> Category *</label>
+                    <select name="category" id="editEventCategory" required>
+                        <option value="Health & Hygiene">Health & Hygiene</option>
+                        <option value="Environment">Environment</option>
+                        <option value="Education">Education</option>
+                        <option value="Social Awareness">Social Awareness</option>
+                        <option value="Disaster Relief">Disaster Relief</option>
+                    </select>
+                </div>
+                <div class="form-input-box">
+                    <label><i class="fas fa-calendar-day"></i> Date *</label>
+                    <input type="date" name="date" id="editEventDate" required>
+                </div>
+                <div class="form-input-box">
+                    <label><i class="fas fa-clock"></i> Time *</label>
+                    <input type="text" name="time" id="editEventTime" required>
+                </div>
+                <div class="form-input-box">
+                    <label><i class="fas fa-map-marker-alt"></i> Venue *</label>
+                    <input type="text" name="venue" id="editEventVenue" required>
+                </div>
+                <div class="form-input-box">
+                    <label><i class="fas fa-award"></i> Service Hours Credit *</label>
+                    <input type="number" name="hours" id="editEventHours" min="1" max="24" required>
+                </div>
+                <div class="form-input-box">
+                    <label><i class="fas fa-tasks"></i> Status *</label>
+                    <select name="status" id="editEventStatus">
+                        <option value="upcoming">Upcoming</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="form-input-box">
+                    <label><i class="fas fa-users"></i> Max Quota *</label>
+                    <input type="number" name="max_volunteers" id="editEventQuota" min="10" max="500">
+                </div>
+            </div>
+            <div class="form-input-box mb-2">
+                <label><i class="fas fa-align-left"></i> Description *</label>
+                <textarea name="description" id="editEventDescription" rows="3" required></textarea>
+            </div>
+            <div class="pwd-modal-actions">
+                <button type="button" class="btn-pwd-cancel" onclick="closeEditEventModal()">Cancel</button>
+                <button type="submit" class="btn-pwd-submit" style="background:#af8d44;">Save Changes &rarr;</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MODAL 2: EDIT CIRCULAR NOTICE
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="faculty-edit-modal-backdrop" id="editNewsModal">
+    <div class="faculty-edit-modal-card">
+        <div class="pwd-modal-close" onclick="closeEditNewsModal()">&times;</div>
+        <div class="pwd-modal-header">
+            <div class="pwd-icon-circle" style="background:rgba(26,115,232,0.15); color:#1a73e8;">
+                <i class="fas fa-bullhorn"></i>
+            </div>
+            <h3>Edit Official Circular</h3>
+            <p>Update notice headline, category, and circular body.</p>
+        </div>
+        <form id="editNewsForm" method="POST" action="">
+            <div class="dashboard-form-grid mb-2">
+                <div class="form-input-box">
+                    <label><i class="fas fa-heading"></i> Circular Title *</label>
+                    <input type="text" name="title" id="editNewsTitle" required>
+                </div>
+                <div class="form-input-box">
+                    <label><i class="fas fa-tag"></i> Category *</label>
+                    <select name="category" id="editNewsCategory" required>
+                        <option value="announcement">Announcement</option>
+                        <option value="update">Drive Update</option>
+                        <option value="achievement">Achievement & Recognition</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-input-box mb-2">
+                <label><i class="fas fa-calendar-day"></i> Date</label>
+                <input type="date" name="date" id="editNewsDate">
+            </div>
+            <div class="form-input-box mb-2">
+                <label><i class="fas fa-file-alt"></i> Notice Content *</label>
+                <textarea name="content" id="editNewsContent" rows="4" required></textarea>
+            </div>
+            <div class="pwd-modal-actions">
+                <button type="button" class="btn-pwd-cancel" onclick="closeEditNewsModal()">Cancel</button>
+                <button type="submit" class="btn-pwd-submit" style="background:#af8d44;">Save Changes &rarr;</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MODAL 3: EDIT ATTENDANCE RECORD
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="faculty-edit-modal-backdrop" id="editAttendanceModal">
+    <div class="faculty-edit-modal-card">
+        <div class="pwd-modal-close" onclick="closeEditAttendanceModal()">&times;</div>
+        <div class="pwd-modal-header">
+            <div class="pwd-icon-circle" style="background:rgba(46,125,50,0.15); color:#2e7d32;">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <h3>Edit Attendance Session</h3>
+            <p id="editAttendanceEventTitle" style="font-weight:600; color:#18191c;"></p>
+        </div>
+        <form id="editAttendanceForm" method="POST" action="">
+            <div class="dashboard-form-grid mb-2">
+                <div class="form-input-box">
+                    <label><i class="fas fa-calendar-alt"></i> Session Date *</label>
+                    <input type="date" name="date" id="editAttendanceDate" required>
+                </div>
+                <div class="form-input-box">
+                    <label><i class="fas fa-award"></i> Hours Credited per Volunteer *</label>
+                    <input type="number" name="hours_to_credit" id="editAttendanceHours" min="1" max="24" required>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin:16px 0 10px;">
+                <label style="font-size:13.5px; font-weight:700; color:#18191c; margin:0;">Volunteers Present in This Session:</label>
+                <button type="button" class="branch-pill-btn" onclick="toggleEditAttendanceChecks()">Toggle All</button>
+            </div>
+
+            <div style="max-height:260px; overflow-y:auto; border:1px solid #ebe7de; border-radius:8px; padding:10px; background:#fafafa; margin-bottom:18px;">
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:8px;">
+                    {% for vol in volunteers %}
+                    <label style="display:flex; align-items:center; gap:8px; background:#ffffff; padding:8px 12px; border-radius:6px; border:1px solid #e5e0d8; cursor:pointer; font-size:13px;">
+                        <input type="checkbox" name="present" value="{{ vol.roll_no }}" class="edit-attendance-chk" style="width:16px; height:16px; accent-color:#af8d44;">
+                        <div>
+                            <strong style="display:block; font-size:13px; color:#18191c;">{{ vol.name }}</strong>
+                            <span style="font-size:11px; color:#666;">{{ vol.roll_no }} &bull; {{ vol.branch }}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="pwd-modal-actions">
+                <button type="button" class="btn-pwd-cancel" onclick="closeEditAttendanceModal()">Cancel</button>
+                <button type="submit" class="btn-pwd-submit" style="background:#af8d44;">Update & Recompute Hours &rarr;</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Tab Switching within Faculty Dashboard - SIDEBAR NEVER DISAPPEARS!
+function switchFacultyPanel(tabName) {
+    document.querySelectorAll('.faculty-panel-section').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.sidebar-nav-btn').forEach(btn => btn.classList.remove('active'));
+
+    const activePanel = document.getElementById('panel-' + tabName);
+    if (activePanel) {
+        activePanel.style.display = 'block';
+    }
+    const activeBtn = document.querySelector('.sidebar-nav-btn[data-tab="' + tabName + '"]');
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    try {
+        history.replaceState(null, '', '#' + tabName);
+    } catch(e) {}
+}
+window.switchFacultyPanel = switchFacultyPanel;
+
+// Check for initial hash on load (e.g. #volunteers or #contributions)
+document.addEventListener('DOMContentLoaded', function() {
+    const pubDate = document.getElementById('publishCircularDate');
+    if (pubDate && !pubDate.value) {
+        pubDate.value = new Date().toISOString().split('T')[0];
+    }
+    const hash = window.location.hash.replace('#', '');
+    if (hash && document.getElementById('panel-' + hash)) {
+        switchFacultyPanel(hash);
+    }
+});
+
+// Real-time volunteer directory search
+function filterVolunteersTable() {
+    const input = document.getElementById('volunteerSearchInput');
+    const filter = input.value.toUpperCase();
+    const rows = document.querySelectorAll('#volunteersDirectoryTable tbody tr');
+
+    rows.forEach(row => {
+        const text = row.innerText.toUpperCase();
+        if (text.indexOf(filter) > -1) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Branch filter buttons for volunteers table
+function filterByBranch(branch, btn) {
+    document.querySelectorAll('.branch-pill-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const rows = document.querySelectorAll('#volunteersDirectoryTable tbody tr');
+    rows.forEach(row => {
+        const rowBranch = (row.getAttribute('data-branch') || '').trim().toUpperCase();
+        const targetBranch = branch.trim().toUpperCase();
+        if (targetBranch === 'ALL' || rowBranch === targetBranch || rowBranch.indexOf(targetBranch) > -1) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Toggle all checkboxes in attendance
+let allChecked = true;
+function toggleAllAttendanceChecks() {
+    allChecked = !allChecked;
+    document.querySelectorAll('.attendance-chk').forEach(chk => {
+        chk.checked = allChecked;
+    });
+}
+
+// Update hours display in attendance form
+function updateAttendanceHours(select) {
+    const opt = select.options[select.selectedIndex];
+    const hours = opt.getAttribute('data-hours') || 4;
+    document.getElementById('eventHoursDisplay').value = hours + ' Hours';
+    const badge = document.getElementById('facultyAttendanceHoursBadge');
+    if (badge) badge.textContent = hours;
+    const inp = document.getElementById('facultyHoursInput');
+    if (inp) inp.value = hours;
+}
+
+// Edit Drive Modal Handlers
+function openEditEventModal(ev) {
+    document.getElementById('editEventForm').action = '/events/' + ev.id + '/edit';
+    document.getElementById('editEventTitle').value = ev.title || '';
+    document.getElementById('editEventCategory').value = ev.category || 'Environment';
+    document.getElementById('editEventDate').value = ev.date || '';
+    document.getElementById('editEventTime').value = ev.time || '';
+    document.getElementById('editEventVenue').value = ev.venue || '';
+    document.getElementById('editEventHours').value = ev.hours || 4;
+    document.getElementById('editEventStatus').value = ev.status || 'upcoming';
+    document.getElementById('editEventQuota').value = ev.max_volunteers || 50;
+    document.getElementById('editEventDescription').value = ev.description || '';
+    document.getElementById('editEventModal').style.display = 'flex';
+}
+function closeEditEventModal() {
+    document.getElementById('editEventModal').style.display = 'none';
+}
+
+// Edit News Circular Modal Handlers
+function openEditNewsModal(item) {
+    document.getElementById('editNewsForm').action = '/news/' + item.id + '/edit';
+    document.getElementById('editNewsTitle').value = item.title || '';
+    document.getElementById('editNewsCategory').value = item.category || 'announcement';
+    document.getElementById('editNewsDate').value = item.date || '';
+    document.getElementById('editNewsContent').value = item.content || '';
+    document.getElementById('editNewsModal').style.display = 'flex';
+}
+function closeEditNewsModal() {
+    document.getElementById('editNewsModal').style.display = 'none';
+}
+
+// Edit Attendance Record Modal Handlers
+function openEditAttendanceModal(rec) {
+    document.getElementById('editAttendanceForm').action = '/attendance/' + rec.id + '/edit';
+    document.getElementById('editAttendanceEventTitle').textContent = (rec.event_title || 'Session') + ' (Session #' + rec.id + ')';
+    document.getElementById('editAttendanceDate').value = rec.date || '';
+    document.getElementById('editAttendanceHours').value = rec.hours || 4;
+    const presentList = rec.present || [];
+    document.querySelectorAll('.edit-attendance-chk').forEach(chk => {
+        chk.checked = presentList.indexOf(chk.value) !== -1;
+    });
+    document.getElementById('editAttendanceModal').style.display = 'flex';
+}
+function closeEditAttendanceModal() {
+    document.getElementById('editAttendanceModal').style.display = 'none';
+}
+
+let editAttendanceAll = false;
+function toggleEditAttendanceChecks() {
+    editAttendanceAll = !editAttendanceAll;
+    document.querySelectorAll('.edit-attendance-chk').forEach(chk => {
+        chk.checked = editAttendanceAll;
+    });
+}
+
+// Backdrop Click Handler for Edit Modals
+window.addEventListener('click', function(e) {
+    const m1 = document.getElementById('editEventModal');
+    if (m1 && e.target === m1) m1.style.display = 'none';
+    const m2 = document.getElementById('editNewsModal');
+    if (m2 && e.target === m2) m2.style.display = 'none';
+    const m3 = document.getElementById('editAttendanceModal');
+    if (m3 && e.target === m3) m3.style.display = 'none';
+});
+</script>
+{% endblock %}

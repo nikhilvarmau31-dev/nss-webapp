@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NSS - National Service Scheme{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Navbar -->
+{% block navbar %}
+<nav class="navbar">
+    <div class="container">
+        <a href="{{ url_for('home') }}" class="navbar-brand">
+            <div class="brand-logos">
+                <img src="{{ url_for('static', filename='images/mvgr logo.png') }}" alt="MVGR Crest" class="navbar-crest">
+                <img src="{{ url_for('static', filename='images/nss_logo_real.svg') }}" alt="NSS Logo" class="navbar-logo">
+            </div>
+            <div class="brand-text">
+                <span class="brand-name">MVGRCE(A) NSS</span>
+                <span class="brand-sub">National Service Scheme Portal</span>
+            </div>
+        </a>
+        <input type="checkbox" id="menu-toggle" class="menu-toggle">
+        <label for="menu-toggle" class="hamburger"><span></span><span></span><span></span></label>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('home') }}" {% if request.endpoint == 'home' %}class="active"{% endif %}>Home</a></li>
+            <li><a href="{{ url_for('about') }}" {% if request.endpoint == 'about' %}class="active"{% endif %}>About</a></li>
+            <li><a href="{{ url_for('event_list') }}" {% if request.endpoint == 'event_list' %}class="active"{% endif %}>Events</a></li>
+            <li><a href="{{ url_for('news') }}" {% if request.endpoint == 'news' %}class="active"{% endif %}>News</a></li>
+            <li><a href="{{ url_for('gallery') }}" {% if request.endpoint == 'gallery' %}class="active"{% endif %}>Gallery</a></li>
+            <li><a href="{{ url_for('contact') }}" {% if request.endpoint == 'contact' %}class="active"{% endif %}>Contact</a></li>
+            <li><a href="{{ url_for('register') }}" {% if request.endpoint == 'register' %}class="active"{% endif %}>Join NSS</a></li>
+            {% if session.get('faculty') %}
+            <li><a href="{{ url_for('faculty_dashboard') }}" class="btn-portal"><i class="fas fa-chalkboard-teacher"></i> Faculty Portal</a></li>
+            <li><a href="{{ url_for('faculty_logout') }}" class="btn-logout" title="Logout"><i class="fas fa-sign-out-alt"></i></a></li>
+            {% elif session.get('student') %}
+            <li><a href="{{ url_for('student_dashboard') }}" class="btn-portal"><i class="fas fa-user-graduate"></i> {{ session.get('student') }}</a></li>
+            <li><a href="{{ url_for('student_logout') }}" class="btn-logout" title="Logout"><i class="fas fa-sign-out-alt"></i></a></li>
+            {% else %}
+            <li><a href="{{ url_for('login') }}" class="btn-portal"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
+{% endblock %}
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container">
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">
+        <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+        {{ message }}
+        <span class="close-alert">&times;</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<!-- Main Content -->
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <div class="footer-brand">
+                    <img src="{{ url_for('static', filename='images/nss_logo_real.svg') }}" alt="NSS Logo" class="footer-logo">
+                    <span>NSS Unit</span>
+                </div>
+                <p>Not Me But You — The motto that drives us to serve our community and nation with dedication.</p>
+                <div class="social-links">
+                    <a href="https://instagram.com/nss_mvgr" target="_blank" rel="noopener noreferrer" class="social-btn instagram" title="Instagram (@nss_mvgr)" aria-label="Instagram Page (@nss_mvgr)">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://whatsapp.com/channel/0029Vb8t94P23n3giLYXHm1L" target="_blank" rel="noopener noreferrer" class="social-btn whatsapp" title="WhatsApp Community Channel" aria-label="WhatsApp Community Channel">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                    <a href="mailto:support.nssmvgr@gmail.com" class="social-btn email" title="Official NSS Support Email" aria-label="Support Email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                    <li><a href="{{ url_for('about') }}">About NSS</a></li>
+                    <li><a href="{{ url_for('event_list') }}">Events</a></li>
+                    <li><a href="{{ url_for('news') }}">News</a></li>
+                    <li><a href="{{ url_for('gallery') }}">Gallery</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Get Involved</h4>
+                <ul>
+                    <li><a href="{{ url_for('register') }}">Volunteer Registration</a></li>
+                    <li><a href="{{ url_for('event_list') }}">Upcoming Events</a></li>
+                    <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Contact Info</h4>
+                <ul class="contact-info">
+                    <li><i class="fas fa-map-marker-alt"></i> NSS Unit Office, Vijayaram Campus</li>
+                    <li><i class="fas fa-phone"></i> NSS Program Officer: +91 94913 21353</li>
+                    <li><i class="fas fa-phone"></i> Student Coordinator: +91 93922 48036</li>
+                    <li><i class="fas fa-envelope"></i> nsscell@mvgrce.edu.in</li>
+                    <li><i class="fas fa-clock"></i> Mon–Fri: 10 AM – 5 PM</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Institutional Bottom Bar matching sample ui.jpeg -->
+        <div class="footer-institutional-bar">
+            <div class="inst-left">
+                <img src="{{ url_for('static', filename='images/mvgr logo.png') }}" alt="MVGR Crest" class="footer-crest-img">
+                <div class="inst-text">
+                    <span class="inst-uni">MVGRCE(A)</span>
+                    <span class="inst-mansas">MANSAS &bull; FORT VIZIANAGARAM</span>
+                </div>
+            </div>
+            <div class="inst-center">
+                <span>MVGR College of Engineering (Autonomous) &bull; National Service Scheme (NSS)</span>
+            </div>
+            <div class="inst-right">
+                <span class="footer-channels-label">Official Channels:</span>
+                <a href="https://instagram.com/nss_mvgr" target="_blank" rel="noopener noreferrer" class="inst-social-pill instagram" title="Instagram: @nss_mvgr">
+                    <i class="fab fa-instagram"></i> Instagram
+                </a>
+                <a href="https://whatsapp.com/channel/0029Vb8t94P23n3giLYXHm1L" target="_blank" rel="noopener noreferrer" class="inst-social-pill whatsapp" title="WhatsApp Community Channel">
+                    <i class="fab fa-whatsapp"></i> WhatsApp
+                </a>
+                <a href="mailto:support.nssmvgr@gmail.com" class="inst-social-pill email" title="Official Support: support.nssmvgr@gmail.com">
+                    <i class="fas fa-envelope"></i> support.nssmvgr@gmail.com
+                </a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 MVGR College of Engineering (Autonomous) &bull; NSS Unit. All rights reserved. | "Not Me But You"</p>
+        </div>
+    </div>
+</footer>
+
+{% if session.get('student') or session.get('faculty') %}
+<!-- Change Password Modal for all logged-in roles -->
+<div class="pwd-modal-backdrop" id="passwordModal">
+    <div class="pwd-modal-card">
+        <div class="pwd-modal-close" onclick="closePasswordModal()">&times;</div>
+        <div class="pwd-modal-header">
+            <div class="pwd-icon-circle">
+                <i class="fas fa-key"></i>
+            </div>
+            <h3>Change Password</h3>
+            <p>Update credentials for <strong>
+{% if session.get('faculty') %}{{ session.get('faculty_name', 'Faculty Coordinator') }}
+                {% elif session.get('student') %}{{ session.get('student_name', session.get('student')) }}
+                {% endif %}
+            </strong></p>
+        </div>
+        <form method="POST" action="{{ url_for('change_password') }}">
+            <div class="form-group mb-2">
+                <label class="pwd-label"><i class="fas fa-lock"></i> Current Password *</label>
+                <input type="password" name="current_password" class="pwd-input" required placeholder="Enter current password" autocomplete="current-password">
+            </div>
+            <div class="form-group mb-2">
+                <label class="pwd-label"><i class="fas fa-shield-alt"></i> New Password *</label>
+                <input type="password" name="new_password" class="pwd-input" required minlength="6" placeholder="At least 6 characters" autocomplete="new-password">
+            </div>
+            <div class="form-group mb-3">
+                <label class="pwd-label"><i class="fas fa-check-circle"></i> Confirm New Password *</label>
+                <input type="password" name="confirm_password" class="pwd-input" required minlength="6" placeholder="Re-enter new password" autocomplete="new-password">
+            </div>
+            <div class="pwd-modal-actions">
+                <button type="button" class="btn-pwd-cancel" onclick="closePasswordModal()">Cancel</button>
+                <button type="submit" class="btn-pwd-submit">Update Password &rarr;</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openPasswordModal() {
+    const modal = document.getElementById('passwordModal');
+    if (modal) modal.style.display = 'flex';
+}
+function closePasswordModal() {
+    const modal = document.getElementById('passwordModal');
+    if (modal) modal.style.display = 'none';
+}
+window.addEventListener('click', function(e) {
+    const modal = document.getElementById('passwordModal');
+    if (modal && e.target === modal) {
+        modal.style.display = 'none';
+    }
+});
+</script>
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

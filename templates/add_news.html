@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Add News{% endblock %}
+{% block content %}
+<section class="page-header"><div class="container"><h1>Add News / Announcement</h1></div></section>
+<section class="section">
+    <div class="container">
+        <div class="form-wrapper">
+            <form method="POST" action="{{ url_for('add_news') }}">
+                <div class="form-group"><label>Title *</label><input type="text" name="title" required placeholder="News headline"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Date *</label><input type="date" name="date" required></div>
+                    <div class="form-group"><label>Category *</label>
+                        <select name="category" required>
+                            <option value="announcement">Announcement</option>
+                            <option value="event">Event</option>
+                            <option value="activity">Activity</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group"><label>Content *</label><textarea name="content" rows="6" required placeholder="Write the full content here..."></textarea></div>
+                <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-paper-plane"></i> Publish News</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}NSS - Home | National Service Scheme{% endblock %}
+{% block content %}
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <div class="hero-brand-logos">
+            <img src="{{ url_for('static', filename='images/mvgr logo.png') }}" alt="MVGR Crest" class="hero-crest">
+            <img src="{{ url_for('static', filename='images/nss_logo_real.svg') }}" alt="NSS Logo" class="hero-logo">
+        </div>
+        <p class="hero-inst-sub">Maharaj Vijayaram Gajapathi Raj College of Engineering (A)</p>
+        <h1>National Service Scheme</h1>
+        <p class="hero-motto">"Not Me But You"</p>
+        <p class="hero-desc">Serving the community, building the nation. Join thousands of youth in making a real difference through voluntary service.</p>
+        <div class="hero-buttons">
+            <a href="{{ url_for('register') }}" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i> Join NSS Today
+            </a>
+            <a href="{{ url_for('about') }}" class="btn btn-outline">
+                <i class="fas fa-info-circle"></i> Learn More
+            </a>
+        </div>
+    </div>
+    <div class="hero-scroll"><i class="fas fa-chevron-down"></i></div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-num" data-count="{{ stats.volunteers }}">{{ stats.volunteers }}</div>
+                <div class="stat-label">Volunteers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                <div class="stat-num" data-count="{{ stats.events }}">{{ stats.events }}</div>
+                <div class="stat-label">Events Conducted</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-num" data-count="{{ stats.hours }}">{{ stats.hours }}</div>
+                <div class="stat-label">Service Hours</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-home"></i></div>
+                <div class="stat-num" data-count="{{ stats.villages }}">{{ stats.villages }}</div>
+                <div class="stat-label">Villages Covered</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Preview -->
+<section class="about-preview section">
+    <div class="container">
+        <div class="about-grid">
+            <div class="about-text">
+                <span class="section-tag">Who We Are</span>
+                <h2>Building a Better Society Through Youth Power</h2>
+                <p>The National Service Scheme (NSS) is a Central Sector Scheme of Government of India, Ministry of Youth Affairs & Sports. It provides opportunity to the student youth of 11th & 12th Class of schools at +2 Board level and student youth of Technical Institution, Graduate & Post Graduate at colleges and University level to take part in various Government led community service activities & programs.</p>
+                <div class="about-features">
+                    <div class="feature"><i class="fas fa-check-circle"></i> Community Development</div>
+                    <div class="feature"><i class="fas fa-check-circle"></i> Social Awareness Programs</div>
+                    <div class="feature"><i class="fas fa-check-circle"></i> Skill Development</div>
+                    <div class="feature"><i class="fas fa-check-circle"></i> National Integration</div>
+                </div>
+                <a href="{{ url_for('about') }}" class="btn btn-primary">Know More <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="about-visual">
+                <div class="visual-card main-card">
+                    <i class="fas fa-hands-helping"></i>
+                    <h3>Service to Society</h3>
+                    <p>Making communities stronger</p>
+                </div>
+                <div class="visual-card side-card-1">
+                    <i class="fas fa-seedling"></i>
+                    <p>Environment</p>
+                </div>
+                <div class="visual-card side-card-2">
+                    <i class="fas fa-heartbeat"></i>
+                    <p>Health</p>
+                </div>
+                <div class="visual-card side-card-3">
+                    <i class="fas fa-graduation-cap"></i>
+                    <p>Education</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Upcoming Events -->
+<section class="events-preview section bg-light">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag">What's Happening</span>
+            <h2>Upcoming Events</h2>
+            <p>Join us in our upcoming activities and make a difference</p>
+        </div>
+        {% if upcoming_events %}
+        <div class="events-grid">
+            {% for event in upcoming_events %}
+            <div class="event-card">
+                <div class="event-date-badge">
+                    <span class="day">{{ event.date[8:10] }}</span>
+                    <span class="month">{{ event.date[5:7] | int | month_name }}</span>
+                </div>
+                <div class="event-info">
+                    <span class="event-category">{{ event.category }}</span>
+                    <h3>{{ event.title }}</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> {{ event.venue }}</p>
+                    <p><i class="fas fa-clock"></i> {{ event.time }}</p>
+                    <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-sm btn-primary">View Details</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-calendar-alt"></i>
+            <p>No upcoming events at the moment. Check back soon!</p>
+        </div>
+        {% endif %}
+        <div class="text-center mt-2">
+            <a href="{{ url_for('event_list') }}" class="btn btn-outline">View All Events <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </div>
+</section>
+
+<!-- Activities Section -->
+<section class="activities-section section">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag">Our Work</span>
+            <h2>Key Activity Areas</h2>
+            <p>NSS volunteers work across diverse sectors to uplift communities</p>
+        </div>
+        <div class="activities-grid">
+            <div class="activity-card">
+                <div class="activity-icon env"><i class="fas fa-leaf"></i></div>
+                <h3>Environment</h3>
+                <p>Tree plantation, waste management, water conservation, and eco-awareness programs.</p>
+            </div>
+            <div class="activity-card">
+                <div class="activity-icon health"><i class="fas fa-heartbeat"></i></div>
+                <h3>Health & Hygiene</h3>
+                <p>Blood donation camps, health awareness drives, and sanitation campaigns.</p>
+            </div>
+            <div class="activity-card">
+                <div class="activity-icon edu"><i class="fas fa-book-open"></i></div>
+                <h3>Education</h3>
+                <p>Adult literacy programs, tutoring for underprivileged children, and digital literacy.</p>
+            </div>
+            <div class="activity-card">
+                <div class="activity-icon disaster"><i class="fas fa-hands-helping"></i></div>
+                <h3>Disaster Relief</h3>
+                <p>Emergency response, relief distribution, and rehabilitation support during disasters.</p>
+            </div>
+            <div class="activity-card">
+                <div class="activity-icon social"><i class="fas fa-users"></i></div>
+                <h3>Social Awareness</h3>
+                <p>Gender equality, anti-drug campaigns, voter awareness, and anti-corruption drives.</p>
+            </div>
+            <div class="activity-card">
+                <div class="activity-icon skill"><i class="fas fa-tools"></i></div>
+                <h3>Skill Development</h3>
+                <p>Vocational training, entrepreneurship workshops, and livelihood programs.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Latest News -->
+<section class="news-preview section bg-light">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag">Stay Updated</span>
+            <h2>Latest News & Announcements</h2>
+        </div>
+        <div class="news-grid">
+            {% for item in latest_news %}
+            <div class="news-card">
+                <span class="news-category {{ item.category }}">{{ item.category }}</span>
+                <h3>{{ item.title }}</h3>
+                <p class="news-date"><i class="fas fa-calendar"></i> {{ item.date }}</p>
+                <p>{{ item.content[:120] }}...</p>
+                <a href="{{ url_for('news') }}" class="read-more">Read More <i class="fas fa-arrow-right"></i></a>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-2">
+            <a href="{{ url_for('news') }}" class="btn btn-outline">View All News <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Ready to Make a Difference?</h2>
+            <p>Join our NSS unit and become part of a movement that transforms lives. Every hour you give makes our community stronger.</p>
+            <div class="cta-buttons">
+                <a href="{{ url_for('register') }}" class="btn btn-white">
+                    <i class="fas fa-user-plus"></i> Join NSS
+                </a>
+                <a href="{{ url_for('contact') }}" class="btn btn-outline-white">
+                    <i class="fas fa-envelope"></i> Get in Touch
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

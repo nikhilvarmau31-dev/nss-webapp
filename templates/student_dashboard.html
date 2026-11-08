@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+{% block title %}Student Portal - MVGR NSS Unit{% endblock %}
+
+{% block content %}
+<div class="portal-dashboard-layout">
+    <!-- Left Institutional Persistent Sidebar -->
+    <aside class="portal-sidebar">
+        <div class="sidebar-brand-box">
+            <div class="sidebar-crest">
+                <img src="{{ url_for('static', filename='images/mvgr logo.png') }}" alt="MVGR Crest">
+            </div>
+            <div class="sidebar-brand-text">
+                <span class="uni-name">MVGRCE(A)</span>
+                <span class="portal-name">NSS Student Portal</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <button type="button" class="sidebar-nav-btn active" data-tab="overview" onclick="switchStudentPanel('overview')">
+                <span class="link-icon"><i class="fas fa-th-large"></i></span>
+                <span class="link-text">Dashboard</span>
+            </button>
+            <button type="button" class="sidebar-nav-btn" data-tab="news" onclick="switchStudentPanel('news')">
+                <span class="link-icon"><i class="fas fa-bullhorn"></i></span>
+                <span class="link-text">Notices & Circulars</span>
+            </button>
+            <button type="button" class="sidebar-nav-btn" data-tab="events" onclick="switchStudentPanel('events')">
+                <span class="link-icon"><i class="fas fa-calendar-alt"></i></span>
+                <span class="link-text">Available Drives</span>
+            </button>
+            <button type="button" class="sidebar-nav-btn" data-tab="attendance" onclick="switchStudentPanel('attendance')">
+                <span class="link-icon"><i class="fas fa-clipboard-check"></i></span>
+                <span class="link-text">Attendance & Hours</span>
+            </button>
+            <button type="button" class="sidebar-nav-btn" data-tab="profile" onclick="switchStudentPanel('profile')">
+                <span class="link-icon"><i class="fas fa-user-graduate"></i></span>
+                <span class="link-text">My Profile</span>
+            </button>
+            <a href="javascript:void(0)" onclick="openPasswordModal()" class="sidebar-nav-btn" style="text-decoration:none;">
+                <span class="link-icon"><i class="fas fa-key"></i></span>
+                <span class="link-text">Change Password</span>
+            </a>
+            <a href="{{ url_for('student_logout') }}" class="sidebar-nav-btn logout-link" style="text-decoration:none; margin-top:auto;">
+                <span class="link-icon"><i class="fas fa-sign-out-alt"></i></span>
+                <span class="link-text">Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content Area with Persistent Sidebar -->
+    <main class="portal-main-area">
+        <!-- Top Institutional Bar -->
+        <header class="portal-top-bar">
+            <div class="top-bar-left">
+                <span class="breadcrumb-tag">MVGR College of Engineering (A) &bull; National Service Scheme</span>
+            </div>
+            <div class="top-bar-right">
+                <div class="user-chip">
+                    <span class="user-badge-code">{{ volunteer.roll_no }}</span>
+                    <span class="user-avatar-circle"><i class="fas fa-user-graduate"></i></span>
+                    <span class="user-name-display">{{ volunteer.name }}</span>
+                </div>
+                <button type="button" class="top-bar-pwd-btn" onclick="openPasswordModal()" title="Change Account Password">
+                    <i class="fas fa-key"></i> Password
+                </button>
+                <a href="{{ url_for('student_logout') }}" class="top-bar-logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </header>
+
+        <div class="portal-content-container">
+            
+            <!-- ═══════════════════════════════════════════════════════════════
+                 PANEL 1: DASHBOARD OVERVIEW
+                 ═══════════════════════════════════════════════════════════════ -->
+            <section id="student-panel-overview" class="student-panel-section">
+                <div class="welcome-header-card">
+                    <div class="welcome-text">
+                        <h1 class="welcome-title">Welcome, {{ volunteer.name }}</h1>
+                        <p class="welcome-sub">Your service hours contribute toward community upliftment and NSS graduation honors.</p>
+                    </div>
+                    <div class="student-meta-pills">
+                        <span class="meta-pill"><i class="fas fa-graduation-cap"></i> {{ volunteer.branch }} &bull; {{ volunteer.year }}</span>
+                        <span class="meta-pill"><i class="fas fa-tint"></i> Blood: {{ volunteer.blood_group }}</span>
+                        <span class="meta-pill status-active"><i class="fas fa-check-circle"></i> Status: Active Volunteer</span>
+                    </div>
+                </div>
+
+                <!-- Progress Card (Gold progress bar) -->
+                <div class="portal-progress-card">
+                    <div class="progress-card-header">
+                        <div>
+                            <h3 class="progress-title">NSS Service Hours Progress</h3>
+                            <p class="progress-desc">{{ volunteer.hours_completed }} / {{ target_hours }} Hours Completed toward Certificate</p>
+                        </div>
+                        <div class="progress-percent-badge">
+                            {{ progress_pct }}%
+                        </div>
+                    </div>
+                    <div class="gold-progress-bar-container">
+                        <div class="gold-progress-fill" style="width: {{ progress_pct }}%;"></div>
+                    </div>
+                </div>
+
+                <!-- 4 Highlight Stats -->
+                <div class="portal-stats-row">
+                    <div class="modern-stat-box">
+                        <div class="stat-icon-wrap gold">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-meta">
+                            <span class="stat-number">{{ volunteer.hours_completed }} hrs</span>
+                            <span class="stat-label">Verified Service Hours</span>
+                        </div>
+                    </div>
+                    <div class="modern-stat-box">
+                        <div class="stat-icon-wrap blue">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-meta">
+                            <span class="stat-number">{{ my_events|length }}</span>
+                            <span class="stat-label">Events Enrolled</span>
+                        </div>
+                    </div>
+                    <div class="modern-stat-box">
+                        <div class="stat-icon-wrap green">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        <div class="stat-meta">
+                            <span class="stat-number">{{ my_attendance|length }}</span>
+                            <span class="stat-label">Sessions Attended</span>
+                        </div>
+                    </div>
+                    <div class="modern-stat-box" style="cursor:pointer;" onclick="switchStudentPanel('news')">
+                        <div class="stat-icon-wrap gold">
+                            <i class="fas fa-bullhorn"></i>
+                        </div>
+                        <div class="stat-meta">
+                            <span class="stat-number">{{ news_items|length }}</span>
+                            <span class="stat-label">Official Circulars (View &rarr;)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enrolled Drives Stack -->
+                <div class="portal-split-grid mb-2">
+                    <div class="portal-panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-bookmark gold-icon"></i> My Enrolled Events</h3>
+                            <button type="button" class="btn-card-outline" onclick="switchStudentPanel('events')">Browse Drives &rarr;</button>
+                        </div>
+                        <div class="panel-body">
+                            {% if my_events %}
+                                <div class="event-cards-stack">
+                                    {% for event in my_events %}
+                                    <div class="student-event-card">
+                                        <div class="event-status-pill {% if event.status == 'completed' %}completed{% else %}registered{% endif %}">
+                                            <i class="fas fa-check"></i> {{ event.status|capitalize }}
+                                        </div>
+                                        <h4 class="event-card-title">{{ event.title }}</h4>
+                                        <div class="event-card-meta">
+                                            <span><i class="far fa-calendar"></i> {{ event.date }}</span>
+                                            <span><i class="far fa-clock"></i> {{ event.time }}</span>
+                                            <span><i class="fas fa-map-marker-alt"></i> {{ event.venue }}</span>
+                                            <span class="hours-tag"><i class="fas fa-hourglass-half"></i> {{ event.hours }} Hours</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="empty-portal-state">
+                                    <i class="far fa-calendar-times"></i>
+                                    <p>You haven't enrolled in any events yet. Check Available Drives to enroll.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="portal-panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-history gold-icon"></i> Recent Attendance Records</h3>
+                            <button type="button" class="btn-card-outline" onclick="switchStudentPanel('attendance')">Full Records &rarr;</button>
+                        </div>
+                        <div class="panel-body p-0">
+                            {% if my_attendance %}
+                            <table class="portal-modern-table">
+                                <thead>
+                                    <tr><th>Event</th><th>Date</th><th>Credits</th></tr>
+                                </thead>
+                                <tbody>
+                                    {% for rec in my_attendance[:4] %}
+                                    <tr>
+                                        <td class="fw-600">{{ rec.event_title }}</td>
+                                        <td>{{ rec.date }}</td>
+                                        <td><span class="credit-pill">+{{ rec.hours }} hrs</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <div class="empty-portal-state">
+                                <i class="fas fa-clipboard-list"></i>
+                                <p>No verified attendance records yet.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Latest Official Notices & Circulars Feed in Overview -->
+                <div class="portal-panel full-width">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fas fa-bullhorn gold-icon"></i> Official Circulars & Notices</h3>
+                            <p style="font-size:13px; color:#777; margin-top:4px;">Notices published by NSS faculty coordinators and unit officers.</p>
+                        </div>
+                        <button type="button" class="btn-card-outline" onclick="switchStudentPanel('news')">View All Circulars ({{ news_items|length }}) &rarr;</button>
+                    </div>
+                    <div class="panel-body">
+                        {% if news_items %}
+                            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(310px, 1fr)); gap:16px;">
+                                {% for item in news_items[:3] %}
+                                <div style="background:#fff; border:1px solid #ebe7de; border-left:4px solid var(--mvgr-gold); border-radius:10px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:space-between;">
+                                    <div>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                            <span class="status-verified-pill" style="font-size:11px; text-transform:uppercase;">{{ item.category }}</span>
+                                            <span style="font-size:12px; color:#888;"><i class="far fa-calendar-alt"></i> {{ item.date }}</span>
+                                        </div>
+                                        <h4 style="font-size:16px; font-weight:700; color:#18191c; margin-bottom:8px; line-height:1.4;">{{ item.title }}</h4>
+                                        <p style="font-size:13.5px; color:#555; line-height:1.6; margin-bottom:14px;">{{ item.content[:120] }}{% if item.content|length > 120 %}...{% endif %}</p>
+                                    </div>
+                                    <button type="button" onclick="switchStudentPanel('news')" class="btn-card-outline" style="align-self:flex-start; font-size:12px; padding:6px 14px;">
+                                        Read Complete Notice &rarr;
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-portal-state">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>No published circulars yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 PANEL 2: OFFICIAL NOTICES & CIRCULARS
+                 ═══════════════════════════════════════════════════════════════ -->
+            <section id="student-panel-news" class="student-panel-section" style="display:none;">
+                <div class="portal-panel full-width">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fas fa-bullhorn gold-icon"></i> Official NSS Circulars & Announcements</h3>
+                            <p style="font-size:13px; color:#777; margin-top:4px;">Stay informed with official circulars, drive guidelines, and program updates issued by faculty coordinators.</p>
+                        </div>
+                        <span class="panel-counter">{{ news_items|length }} Published Notices</span>
+                    </div>
+
+                    <div class="panel-body">
+                        {% if news_items %}
+                            <div style="display:flex; flex-direction:column; gap:16px;">
+                                {% for item in news_items %}
+                                <div class="student-event-card" style="margin-bottom:0; padding:22px; border-left:4px solid var(--mvgr-gold);">
+                                    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                                        <div>
+                                            <span class="status-verified-pill" style="font-size:11px; text-transform:uppercase; margin-right:8px;">
+                                                <i class="fas fa-tag"></i> {{ item.category }}
+                                            </span>
+                                            <span style="font-size:12.5px; color:#666;">
+                                                <i class="far fa-calendar-alt"></i> {{ item.date }}
+                                            </span>
+                                        </div>
+                                        <span style="font-size:11.5px; color:#777; background:#f0eee9; padding:4px 10px; border-radius:12px;">
+                                            <i class="fas fa-university"></i> MVGR NSS Unit Official
+                                        </span>
+                                    </div>
+                                    <h3 style="font-size:18px; font-weight:700; color:#18191c; margin-bottom:12px;">{{ item.title }}</h3>
+                                    <div style="font-size:14px; color:#444; line-height:1.7; white-space:pre-line;">{{ item.content }}</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-portal-state">
+                                <i class="fas fa-newspaper"></i>
+                                <h4>No Circulars Published</h4>
+                                <p>There are currently no official notices or announcements. Check back later.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 PANEL 2: AVAILABLE DRIVES TO JOIN
+                 ═══════════════════════════════════════════════════════════════ -->
+            <section id="student-panel-events" class="student-panel-section" style="display:none;">
+                <div class="portal-panel full-width">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fas fa-bullhorn gold-icon"></i> Open NSS Community Drives</h3>
+                            <p style="font-size:13px; color:#777; margin-top:4px;">Register for upcoming volunteering drives to earn service credits.</p>
+                        </div>
+                        <span class="panel-counter">{{ available_events|length }} Open Drives</span>
+                    </div>
+
+                    <div class="panel-body">
+                        {% if available_events %}
+                            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:18px;">
+                                {% for event in available_events %}
+                                <div class="student-event-card available" style="display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+                                    <div>
+                                        <div class="event-badge-upcoming mb-1">
+                                            <i class="fas fa-star"></i> Open for Enrollment
+                                        </div>
+                                        <h4 class="event-card-title" style="font-size:17px; margin-bottom:8px;">{{ event.title }}</h4>
+                                        <p class="event-short-desc" style="font-size:13.5px; color:#555; line-height:1.6; margin-bottom:12px;">{{ event.description }}</p>
+                                        <div class="event-card-meta" style="margin-bottom:16px;">
+                                            <span><i class="far fa-calendar"></i> {{ event.date }}</span>
+                                            <span><i class="far fa-clock"></i> {{ event.time }}</span>
+                                            <span><i class="fas fa-map-marker-alt"></i> {{ event.venue }}</span>
+                                            <span class="hours-tag"><i class="fas fa-hourglass-half"></i> +{{ event.hours }} Hours</span>
+                                        </div>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('register_for_event', event_id=event.id) }}">
+                                        <input type="hidden" name="roll_no" value="{{ volunteer.roll_no }}">
+                                        <button type="submit" class="btn-portal-gold" style="width:100%; justify-content:center;">
+                                            <i class="fas fa-user-plus"></i> Enroll for Drive &rarr;
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-portal-state">
+                                <i class="fas fa-check-double"></i>
+                                <h4>No Additional Drives Open</h4>
+                                <p>You have enrolled in all available drives! Check back soon for new announcements.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 PANEL 3: ATTENDANCE & HOURS HISTORY
+                 ═══════════════════════════════════════════════════════════════ -->
+            <section id="student-panel-attendance" class="student-panel-section" style="display:none;">
+                <div class="portal-panel full-width">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fas fa-clipboard-check gold-icon"></i> Verified Attendance & Credit History</h3>
+                            <p style="font-size:13px; color:#777; margin-top:4px;">Official audit of verified service hours granted by NSS coordinators.</p>
+                        </div>
+                        <span class="panel-counter">Total: {{ volunteer.hours_completed }} Hours</span>
+                    </div>
+
+                    <div class="panel-body p-0">
+                        {% if my_attendance %}
+                        <table class="portal-modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Event / Activity</th>
+                                    <th>Date Conducted</th>
+                                    <th>Credit Hours</th>
+                                    <th>Verification Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rec in my_attendance %}
+                                <tr>
+                                    <td class="fw-600">{{ rec.event_title }}</td>
+                                    <td>{{ rec.date }}</td>
+                                    <td><span class="credit-pill">+{{ rec.hours }} hrs</span></td>
+                                    <td><span class="status-verified-pill" style="background:#e8f5e9; color:#2e7d32;"><i class="fas fa-check-circle"></i> Verified by Faculty Coordinator</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="empty-portal-state">
+                            <i class="fas fa-clipboard-list"></i>
+                            <h4>No Verified Attendance Records</h4>
+                            <p>Attend scheduled community drives. Coordinators mark and verify attendance directly upon drive completion.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 PANEL 4: VOLUNTEER PROFILE & CREDENTIALS
+                 ═══════════════════════════════════════════════════════════════ -->
+            <section id="student-panel-profile" class="student-panel-section" style="display:none;">
+                <div class="portal-panel full-width">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fas fa-user-graduate gold-icon"></i> Volunteer Profile & Credentials</h3>
+                            <p style="font-size:13px; color:#777; margin-top:4px;">Your institutional registration details in the MVGR NSS database.</p>
+                        </div>
+                    </div>
+
+                    <div class="panel-body">
+                        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:20px; margin-bottom:24px;">
+                            <div style="background:#fafafa; border:1px solid #ebe7de; border-radius:10px; padding:18px;">
+                                <span style="font-size:12px; color:#888; text-transform:uppercase;">Full Name</span>
+                                <h4 style="font-size:16px; margin-top:4px; color:#18191c;">{{ volunteer.name }}</h4>
+                            </div>
+                            <div style="background:#fafafa; border:1px solid #ebe7de; border-radius:10px; padding:18px;">
+                                <span style="font-size:12px; color:#888; text-transform:uppercase;">Roll Number</span>
+                                <h4 style="font-size:16px; margin-top:4px; color:#18191c;"><code>{{ volunteer.roll_no }}</code></h4>
+                            </div>
+                            <div style="background:#fafafa; border:1px solid #ebe7de; border-radius:10px; padding:18px;">
+                                <span style="font-size:12px; color:#888; text-transform:uppercase;">Branch & Year</span>
+                                <h4 style="font-size:16px; margin-top:4px; color:#18191c;">{{ volunteer.branch }} &bull; {{ volunteer.year }}</h4>
+                            </div>
+                            <div style="background:#fafafa; border:1px solid #ebe7de; border-radius:10px; padding:18px;">
+                                <span style="font-size:12px; color:#888; text-transform:uppercase;">Blood Group</span>
+                                <h4 style="font-size:16px; margin-top:4px; color:#8c1d24;">{{ volunteer.blood_group }}</h4>
+                            </div>
+                            <div style="background:#fafafa; border:1px solid #ebe7de; border-radius:10px; padding:18px;">
+                                <span style="font-size:12px; color:#888; text-transform:uppercase;">Contact Phone</span>
+                                <h4 style="font-size:16px; margin-top:4px; color:#18191c;">{{ volunteer.phone }}</h4>
+                            </div>
+                            <div style="background:#fafafa; border:1px solid #ebe7de; border-radius:10px; padding:18px;">
+                                <span style="font-size:12px; color:#888; text-transform:uppercase;">Institutional Email</span>
+                                <h4 style="font-size:16px; margin-top:4px; color:#18191c;">{{ volunteer.email }}</h4>
+                            </div>
+                        </div>
+
+                        <div style="border-top:1px solid #ebe7de; padding-top:20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+                            <button type="button" class="btn-portal-gold" onclick="openPasswordModal()">
+                                <i class="fas fa-key"></i> Change Account Password &rarr;
+                            </button>
+                            <a href="{{ url_for('contact') }}" class="btn-card-outline" style="padding:10px 20px;">
+                                <i class="fas fa-question-circle"></i> Contact NSS Cell
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<script>
+// Persistent Tab Switching in Student Dashboard - SIDEBAR NEVER DISAPPEARS!
+function switchStudentPanel(tabName) {
+    document.querySelectorAll('.student-panel-section').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.sidebar-nav-btn').forEach(btn => btn.classList.remove('active'));
+
+    const activePanel = document.getElementById('student-panel-' + tabName);
+    if (activePanel) {
+        activePanel.style.display = 'block';
+    }
+    const activeBtn = document.querySelector('.sidebar-nav-btn[data-tab="' + tabName + '"]');
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    try {
+        history.replaceState(null, '', '#' + tabName);
+    } catch(e) {
+        window.location.hash = tabName;
+    }
+}
+window.switchStudentPanel = switchStudentPanel;
+
+// Initial hash check
+document.addEventListener('DOMContentLoaded', function() {
+    const hash = window.location.hash.replace('#', '');
+    if (hash && document.getElementById('student-panel-' + hash)) {
+        switchStudentPanel(hash);
+    }
+});
+</script>
+{% endblock %}

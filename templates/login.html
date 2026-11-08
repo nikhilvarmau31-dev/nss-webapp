@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+{% block title %}NSS Portal Login - MVGR College of Engineering{% endblock %}
+
+{% block content %}
+<div class="login-portal-wrapper">
+    <div class="login-portal-container">
+        <!-- Brand Header matching design -->
+        <div class="portal-brand-header">
+            <div class="portal-logo-crest">
+                <img src="{{ url_for('static', filename='images/mvgr logo.png') }}" alt="MVGR Crest" class="crest-img">
+            </div>
+            <div class="portal-brand-titles">
+                <h1 class="portal-main-title">MVGRCE(A)</h1>
+                <p class="portal-subtitle">National Service Scheme Portal</p>
+                <p class="portal-tagline">Not Me But You &bull; Dedicated Community Service &bull; Youth Leadership</p>
+            </div>
+        </div>
+
+        <!-- Floating Login Card with ONLY 2 LOGINS DISPLAYED -->
+        <div class="login-elevated-card">
+            <!-- EXACTLY 2 LOGINS DISPLAYED IN TABS -->
+            <div class="login-nav-tabs">
+                <button type="button" class="login-tab-btn {% if active_tab not in ('faculty', 'faculty-register', 'faculty-verify') %}active{% endif %}" data-tab="student">
+                    Student Login
+                </button>
+                <button type="button" class="login-tab-btn {% if active_tab in ('faculty', 'faculty-register', 'faculty-verify') %}active{% endif %}" data-tab="faculty">
+                    Faculty Login
+                </button>
+            </div>
+
+            <!-- TAB 1: Student User Mode -->
+            <div class="tab-pane {% if active_tab not in ('faculty', 'faculty-register', 'faculty-verify', 'register') %}active{% endif %}" id="tab-student">
+                <div class="card-headings">
+                    <h2 class="card-title">Student Login</h2>
+                    <p class="card-desc">Sign in with your institutional roll number.</p>
+                </div>
+                <form method="POST" action="{{ url_for('login') }}">
+                    <input type="hidden" name="login_type" value="student">
+                    <div class="modern-input-group">
+                        <span class="input-icon"><i class="far fa-user"></i></span>
+                        <input type="text" name="roll_no" class="modern-input" placeholder="Roll Number (e.g. 21331A0501)" required autocomplete="username">
+                    </div>
+                    <div class="modern-input-group">
+                        <span class="input-icon"><i class="fas fa-lock"></i></span>
+                        <input type="password" name="password" class="modern-input" placeholder="Password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn-portal-gold">
+                        Login as Student &rarr;
+                    </button>
+                </form>
+                <div class="card-footer-action">
+                    <p>New volunteer? <a href="#" class="switch-tab-link" data-target="register">Register here</a></p>
+                </div>
+            </div>
+
+            <!-- TAB 2: Faculty Login -->
+            <div class="tab-pane {% if active_tab == 'faculty' %}active{% endif %}" id="tab-faculty">
+                <div class="card-headings">
+                    <h2 class="card-title">Faculty Login</h2>
+                    <p class="card-desc">Sign in with your Faculty ID or institutional credentials.</p>
+                </div>
+                <form method="POST" action="{{ url_for('login') }}">
+                    <input type="hidden" name="login_type" value="faculty">
+                    <div class="modern-input-group">
+                        <span class="input-icon"><i class="far fa-user"></i></span>
+                        <input type="text" name="username" class="modern-input" placeholder="Faculty ID / Username" required autocomplete="username">
+                    </div>
+                    <div class="modern-input-group">
+                        <span class="input-icon"><i class="fas fa-lock"></i></span>
+                        <input type="password" name="password" class="modern-input" placeholder="Password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn-portal-gold">
+                        Login as Faculty &rarr;
+                    </button>
+                </form>
+                <div class="card-footer-action">
+                    <p>New NSS coordinator? <a href="#" class="switch-tab-link" data-target="faculty-register">Register as Faculty</a></p>
+                </div>
+            </div>
+
+            <!-- REGISTRATION PANE: Student Volunteer -->
+            <div class="tab-pane {% if active_tab == 'register' %}active{% endif %}" id="tab-register">
+                <div class="card-headings">
+                    <h2 class="card-title">Volunteer Register</h2>
+                    <p class="card-desc">Join MVGR NSS Unit and start serving.</p>
+                </div>
+                <form method="POST" action="{{ url_for('login') }}">
+                    <input type="hidden" name="login_type" value="register">
+                    <div class="modern-input-group">
+                        <span class="input-icon"><i class="far fa-user"></i></span>
+                        <input type="text" name="name" class="modern-input" placeholder="Full Name" required>
+                    </div>
+                    <div class="modern-input-group">
+                        <span class="input-icon"><i class="fas fa-id-card"></i></span>
+                        <input type="text" name="roll_no" class="modern-input" placeholder="Roll Number (e.g. 21331A0501)" required>
+                    </div>
+                    <div class="modern-input-row">
+                        <div class="modern-input-group half">
+                            <span class="input-icon"><i class="fas fa-graduation-cap"></i></span>
+                            <select name="branch" class="modern-input select-input" required>
+                                <option value="CSE">CSE</option>
+                                <option value="ECE">ECE</option>
+                                <option value="EEE">EEE</option>
+                                <option value="MECH">MECH</option>
+                                <option value="CIVIL">CIVIL</option>
+                                <option value="CHEM">CHEM</option>
+                                <option value="IE&CT">IE&CT</option>
+                                <option value="DE">DE</option>
+                            </select>
+                        </div>
+                        <div class="modern-input-group half">
+                            <span class="input-icon"><i class="fas fa-calendar-alt"></i></span>
+                            <select name="year" class="modern-input select-input" required>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modern-input-group">
+                        <span class="input-icon"><i class="far fa-envelope"></i></span>
+                        <input type="email" name="email" class="modern-input" placeholder="Institutional Email" required>
+                    </div>
+                    <div class="modern-input-row">
+                        <div class="modern-input-group half">
+                            <span class="input-icon"><i class="fas fa-phone-alt"></i></span>
+                            <input type="tel" name="phone" class="modern-input" placeholder="Phone Number" required>
+                        </div>
+                        <div class="modern-input-group half">
+                            <span class="input-icon"><i class="fas fa-tint"></i></span>
+                            <select name="blood_group" class="modern-input select-input" required>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modern-input-row">
+                        <div class="modern-input-group half">
+                            <span class="input-icon"><i class="fas fa-lock"></i></span>
+                            <input type="password" name="password" class="modern-input" placeholder="Create Password" required minlength="4">
+                        </div>
+                        <div class="modern-input-group half">
+                            <span class="input-icon"><i class="fas fa-shield-alt"></i></span>
+                            <input type="password" name="confirm_password" class="modern-input" placeholder="Confirm Password" required minlength="4">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-portal-gold">
+                        Register as Volunteer &rarr;
+                    </button>
+                </form>
+                <div class="card-footer-action">
+                    <p>Already registered? <a href="#" class="switch-tab-link" data-target="student">Sign in here</a></p>
+                </div>
+            </div>
+
+            <!-- FACULTY REGISTRATION PANE -->
+            <div class="tab-pane {% if active_tab == 'faculty-register' %}active{% endif %}" id="tab-faculty-register">
+                <div class="card-headings">
+                    <h2 class="card-title">Faculty Registration</h2>
+                    <p class="card-desc">Register as an NSS Faculty Coordinator.</p>
+                </div>
+                <form method="POST" action="{{ url_for('login') }}">
+                    <input type="hidden" name="login_type" value="faculty_register">
+                    <div class="modern-input-group">
+                        <span class="input-icon"><i class="fas fa-user-tie"></i></span>
+                        <input type="text" name="name" class="modern-input" placeholder="Full Name (e.g. Dr. / Prof. Name)" required>
+                    </div>
+                    <div class="modern-input-row">
+                        <div class="modern-input-group half">
+                            <span class="input-icon"><i class="fas fa-id-badge"></i></span>
+                            <input type="text" name="faculty_id" class="modern-input" placeholder="Faculty ID (e.g. FAC007)" required>
+                        </div>
+                        <div class="modern-input-group half">
+                            <span class="input-icon"><i class="far fa-user"></i></span>
+                            <input type="text" name="username" class="modern-input" placeholder="Username (e.g. dr_ramesh)" required>
+                        </div>
+                    </div>
+                    <div class="modern-input-group">
+                        <span class="input-icon"><i class="fas fa-university"></i></span>
+                        <select name="department" class="modern-input select-input" required>
+                            <option value="">Select Department / Branch</option>
+                            <option value="Computer Science & Engineering">Computer Science & Engineering (CSE)</option>
+                            <option value="Electronics & Communication">Electronics & Communication (ECE)</option>
+                            <option value="Electrical & Electronics">Electrical & Electronics (EEE)</option>
+                            <option value="Mechanical Engineering">Mechanical Engineering (MECH)</option>
+                            <option value="Civil Engineering">Civil Engineering (CIVIL)</option>
+                            <option value="Chemical Engineering">Chemical Engineering (CHEM)</option>
+                            <option value="Information Engineering & Communication Technology (IE&CT)">Information Engineering & Communication Technology (IE&CT)</option>
+                            <option value="Data Engineering (DE)">Data Engineering (DE)</option>
+                        </select>
+                    </div>
+                    <div class="modern-input-group">
+                        <span class="input-icon"><i class="far fa-envelope"></i></span>
+                        <input type="email" name="email" class="modern-input" placeholder="Institutional Email (@mvgrce.edu.in)" required>
+                    </div>
+                    <div class="modern-input-group">
+                        <span class="input-icon"><i class="fas fa-phone-alt"></i></span>
+                        <input type="tel" name="phone" class="modern-input" placeholder="Mobile / Intercom Phone" required>
+                    </div>
+                    <p style="font-size:12px; color:#777; margin-bottom:12px; line-height:1.4;">
+                        <i class="fas fa-shield-alt gold-icon"></i> Institutional verification required: you will be asked for the institutional default password in the next step to complete setup.
+                    </p>
+                    <button type="submit" class="btn-portal-gold">
+                        Continue to Verification &rarr;
+                    </button>
+                </form>
+                <div class="card-footer-action">
+                    <p>Already an NSS coordinator? <a href="#" class="switch-tab-link" data-target="faculty">Faculty Login</a></p>
+                </div>
+            </div>
+
+            <!-- FACULTY VERIFY DEFAULT PASSWORD PANE -->
+            <div class="tab-pane {% if active_tab == 'faculty-verify' %}active{% endif %}" id="tab-faculty-verify">
+                <div class="card-headings">
+                    <div style="width:48px; height:48px; border-radius:50%; background:rgba(175,141,68,0.15); color:#af8d44; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:20px;">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <h2 class="card-title">Default Password Verification</h2>
+                    <p class="card-desc">
+                        {% if session.get('pending_faculty') %}
+                        Activating profile for <strong>{{ session.get('pending_faculty').name }}</strong> ({{ session.get('pending_faculty').faculty_id }}).
+                        {% else %}
+                        Enter the institutional default password to complete faculty activation.
+                        {% endif %}
+                    </p>
+                </div>
+                <form method="POST" action="{{ url_for('login') }}">
+                    <input type="hidden" name="login_type" value="faculty_verify_password">
+                    <div class="modern-input-group">
+                        <span class="input-icon"><i class="fas fa-lock"></i></span>
+                        <input type="password" name="default_password" class="modern-input" placeholder="Enter Institutional Default Password" required autofocus autocomplete="current-password">
+                    </div>
+                    <p style="font-size:12.5px; color:#666; margin-top:-4px; margin-bottom:14px; text-align:left;">
+                        <i class="fas fa-shield-alt gold-icon"></i> Enter the default institutional password issued to authorized faculty coordinators to complete registration. You can change your password anytime after login in your profile.
+                    </p>
+                    <button type="submit" class="btn-portal-gold">
+                        Verify Default Password & Login &rarr;
+                    </button>
+                </form>
+                <div class="card-footer-action">
+                    <p><a href="#" class="switch-tab-link" data-target="faculty-register">&larr; Back to Registration</a> or <a href="#" class="switch-tab-link" data-target="faculty">Faculty Login</a></p>
+                </div>
+            </div>
+
+            <!-- Back to Home Link -->
+            <div class="back-home-wrapper">
+                <a href="{{ url_for('home') }}" class="back-home-link">
+                    <i class="fas fa-arrow-left"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabBtns = document.querySelectorAll('.login-tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    const switchLinks = document.querySelectorAll('.switch-tab-link');
+
+    function activateTab(tabId) {
+        tabBtns.forEach(btn => {
+            const btnTab = btn.getAttribute('data-tab');
+            if ((tabId === 'student' || tabId === 'register') && btnTab === 'student') {
+                btn.classList.add('active');
+            } else if ((tabId === 'faculty' || tabId === 'faculty-register' || tabId === 'faculty-verify') && btnTab === 'faculty') {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        tabPanes.forEach(pane => {
+            if (pane.id === 'tab-' + tabId) {
+                pane.classList.add('active');
+            } else {
+                pane.classList.remove('active');
+            }
+        });
+    }
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const target = this.getAttribute('data-tab');
+            activateTab(target);
+        });
+    });
+
+    switchLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = this.getAttribute('data-target');
+            activateTab(target);
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Volunteer Directory{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div class="container"><h1>Volunteer Directory</h1>
+    <nav class="breadcrumb"><a href="/">Home</a> <i class="fas fa-chevron-right"></i> Volunteers</nav></div>
+</section>
+<section class="section">
+    <div class="container">
+        {% if volunteers %}
+        <div class="table-search">
+            <input type="text" id="volSearch" placeholder="Search by name, roll no or branch..." onkeyup="filterTable()">
+        </div>
+        <div class="table-wrapper">
+            <table class="table" id="volTable">
+                <thead><tr><th>#</th><th>Name</th><th>Roll No.</th><th>Branch</th><th>Year</th><th>Blood</th><th>Hours</th><th>Joined</th><th>Status</th></tr></thead>
+                <tbody>
+                {% for vol in volunteers %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><strong>{{ vol.name }}</strong><br><small>{{ vol.email }}</small></td>
+                    <td>{{ vol.roll_no }}</td>
+                    <td>{{ vol.branch }}</td>
+                    <td>{{ vol.year }}</td>
+                    <td><span class="blood-badge">{{ vol.blood_group }}</span></td>
+                    <td><span class="hours-badge">{{ vol.hours_completed }} hrs</span></td>
+                    <td>{{ vol.joined_date }}</td>
+                    <td><span class="status-badge {{ vol.status }}">{{ vol.status }}</span></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state large"><i class="fas fa-users"></i><h3>No volunteers yet</h3><p>Volunteers who register will appear here.</p></div>
+        {% endif %}
+    </div>
+</section>
+<script>
+function filterTable() {
+    const q = document.getElementById('volSearch').value.toLowerCase();
+    document.querySelectorAll('#volTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}About NSS{% endblock %}
+{% block content %}
+
+<section class="page-header">
+    <div class="container">
+        <h1>About NSS</h1>
+        <p>National Service Scheme — Serving since 1969</p>
+        <nav class="breadcrumb"><a href="/">Home</a> <i class="fas fa-chevron-right"></i> About</nav>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="about-full-grid">
+            <div>
+                <span class="section-tag">Our Story</span>
+                <h2>What is NSS?</h2>
+                <p>The <strong>National Service Scheme (NSS)</strong> was launched in 1969 with the primary objective of developing the personality and character of the student youth through voluntary community service. The motto of NSS is <em>"Not Me But You"</em>, which reflects the essence of democratic living and inculcates the spirit of selfless service among the youth.</p>
+                <p>NSS aims to establish the link between the student youth in the campus and the community at large. NSS volunteers work hard to ensure that everyone who is needy gets help without having to ask for it. NSS is not about serving the society for name or fame.</p>
+                <div class="motto-banner">
+                    <i class="fas fa-quote-left"></i>
+                    <span>"Not Me But You"</span>
+                    <i class="fas fa-quote-right"></i>
+                </div>
+            </div>
+            <div class="about-side">
+                <div class="info-box">
+                    <h4><i class="fas fa-bullseye"></i> Objectives</h4>
+                    <ul>
+                        <li>Understand the community in which students work</li>
+                        <li>Identify needs and problems of the community</li>
+                        <li>Develop among themselves a sense of social & civic responsibility</li>
+                        <li>Utilize knowledge in finding practical solutions</li>
+                        <li>Develop competence required for group living</li>
+                        <li>Gain skills in mobilizing community participation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section bg-light">
+    <div class="container">
+        <div class="section-header">
+            <h2>NSS Symbol & Badge</h2>
+        </div>
+        <div class="symbol-grid">
+            <div class="symbol-card">
+                <div class="symbol-icon"><i class="fas fa-dharmachakra"></i></div>
+                <h3>The Wheel</h3>
+                <p>The NSS badge has the Konark Wheel (Rath Chakra) from the Sun Temple of Konark. The wheel represents the cycle of life — creation and protection. It symbolizes continuity, motion, and progress.</p>
+            </div>
+            <div class="symbol-card">
+                <div class="symbol-icon" style="color:#c0392b"><i class="fas fa-square"></i></div>
+                <h3>The Red Color</h3>
+                <p>The red color in the NSS badge denotes the energy and spirit of youth. It symbolizes passion and dedication to serve.</p>
+            </div>
+            <div class="symbol-card">
+                <div class="symbol-icon" style="color:#0a2558;"><i class="fas fa-square"></i></div>
+                <h3>The Blue Color</h3>
+                <p>The navy blue color represents the cosmos of which the earth is a small part — NSS volunteer considers his/her good work as a humble contribution to society.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Our Activities</h2>
+        </div>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-icon"><i class="fas fa-home"></i></div>
+                <div class="timeline-content">
+                    <h3>Regular Activities (Throughout the year)</h3>
+                    <p>Community development work, awareness programs, blood donation, cleanliness drives, survey activities, and adult education. Each student must complete 120 hours per year.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon"><i class="fas fa-campground"></i></div>
+                <div class="timeline-content">
+                    <h3>Special Camp (7 Days)</h3>
+                    <p>An annual residential special camp is organized in an adopted village. Volunteers stay in the village and work on specific projects. This earns additional credit hours.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon"><i class="fas fa-award"></i></div>
+                <div class="timeline-content">
+                    <h3>Republic Day Parade</h3>
+                    <p>Selected NSS volunteers get the opportunity to participate in the Republic Day Parade at Rajpath, New Delhi — one of the highest honors for an NSS volunteer.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section bg-light">
+    <div class="container">
+        <div class="section-header"><h2>Benefits of Joining NSS</h2></div>
+        <div class="benefits-grid">
+            <div class="benefit-card"><i class="fas fa-certificate"></i><h4>Certificate</h4><p>NSS Certificate issued upon completing 240 hours of service</p></div>
+            <div class="benefit-card"><i class="fas fa-university"></i><h4>Admission Preference</h4><p>Preference in admission to some universities and colleges</p></div>
+            <div class="benefit-card"><i class="fas fa-briefcase"></i><h4>Career Boost</h4><p>Valued by employers for demonstrating leadership and social commitment</p></div>
+            <div class="benefit-card"><i class="fas fa-users"></i><h4>Network</h4><p>Connect with like-minded youth and build lasting friendships</p></div>
+            <div class="benefit-card"><i class="fas fa-brain"></i><h4>Skill Development</h4><p>Leadership, communication, teamwork, and problem-solving skills</p></div>
+            <div class="benefit-card"><i class="fas fa-heart"></i><h4>Personal Growth</h4><p>Develop empathy, discipline, and a sense of social responsibility</p></div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Be the Change You Want to See</h2>
+            <p>Join NSS and become a part of India's largest student volunteer program.</p>
+            <a href="{{ url_for('register') }}" class="btn btn-primary"><i class="fas fa-user-plus"></i> Join NSS</a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

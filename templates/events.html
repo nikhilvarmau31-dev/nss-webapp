@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Events{% endblock %}
+{% block content %}
+
+<section class="page-header">
+    <div class="container">
+        <h1>Events & Activities</h1>
+        <p>Join us in our community service activities</p>
+        <nav class="breadcrumb"><a href="/">Home</a> <i class="fas fa-chevron-right"></i> Events</nav>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        {% if session.get('admin') %}
+        <div class="admin-bar">
+            <a href="{{ url_for('add_event') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Add New Event</a>
+        </div>
+        {% endif %}
+
+        {% if events %}
+        <div class="events-filter">
+            <button class="filter-btn active" data-filter="all">All Events</button>
+            <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+            <button class="filter-btn" data-filter="completed">Completed</button>
+        </div>
+        <div class="events-list">
+            {% for event in events %}
+            <div class="event-list-card {{ event.status }}">
+                <div class="event-date-col">
+                    <div class="event-date-block">
+                        <span class="day">{{ event.date[8:10] }}</span>
+                        <span class="month">{{ event.date[5:7] | int | month_name }}</span>
+                        <span class="year">{{ event.date[:4] }}</span>
+                    </div>
+                </div>
+                <div class="event-details-col">
+                    <div class="event-top">
+                        <span class="event-category-badge">{{ event.category }}</span>
+                        <span class="event-status-badge {{ event.status }}">{{ event.status }}</span>
+                    </div>
+                    <h3>{{ event.title }}</h3>
+                    <div class="event-meta">
+                        <span><i class="fas fa-map-marker-alt"></i> {{ event.venue }}</span>
+                        <span><i class="fas fa-clock"></i> {{ event.time }}</span>
+                        <span><i class="fas fa-hourglass"></i> {{ event.hours }} hrs</span>
+                        <span><i class="fas fa-users"></i> {{ event.registered_volunteers | length }} / {{ event.max_volunteers }}</span>
+                    </div>
+                    <p>{{ event.description[:150] }}{% if event.description | length > 150 %}...{% endif %}</p>
+                </div>
+                <div class="event-action-col">
+                    <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-primary btn-sm">View Details</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state large">
+            <i class="fas fa-calendar-alt"></i>
+            <h3>No events yet</h3>
+            <p>Events will be listed here once they are added.</p>
+            {% if session.get('admin') %}
+            <a href="{{ url_for('add_event') }}" class="btn btn-primary">Add First Event</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}

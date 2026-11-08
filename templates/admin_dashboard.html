@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+{% block title %}Super Admin Dashboard - MVGR NSS Unit{% endblock %}
+
+{% block content %}
+<div class="portal-dashboard-layout">
+    <!-- Left Institutional Sidebar -->
+    <aside class="portal-sidebar">
+        <div class="sidebar-brand-box">
+            <div class="sidebar-crest">
+                <img src="{{ url_for('static', filename='images/mvgr logo.png') }}" alt="MVGR Crest">
+            </div>
+            <div class="sidebar-brand-text">
+                <span class="uni-name">MVGRCE(A)</span>
+                <span class="portal-name">Super Admin Console</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('admin_dashboard') }}" class="sidebar-link active">
+                <span class="link-icon"><i class="fas fa-user-shield"></i></span>
+                <span class="link-text">Super Admin Console</span>
+            </a>
+            <a href="#auditTrailSection" class="sidebar-link">
+                <span class="link-icon"><i class="fas fa-clipboard-list"></i></span>
+                <span class="link-text">Faculty Audit Trail</span>
+            </a>
+            <a href="{{ url_for('volunteer_list') }}" class="sidebar-link">
+                <span class="link-icon"><i class="fas fa-users"></i></span>
+                <span class="link-text">Volunteers</span>
+            </a>
+            <a href="{{ url_for('event_list') }}" class="sidebar-link">
+                <span class="link-icon"><i class="fas fa-calendar-alt"></i></span>
+                <span class="link-text">Events & Drives</span>
+            </a>
+            <a href="{{ url_for('attendance') }}" class="sidebar-link">
+                <span class="link-icon"><i class="fas fa-clipboard-check"></i></span>
+                <span class="link-text">Attendance Records</span>
+            </a>
+            <a href="{{ url_for('add_event') }}" class="sidebar-link">
+                <span class="link-icon"><i class="fas fa-calendar-plus"></i></span>
+                <span class="link-text">Schedule Event</span>
+            </a>
+            <a href="{{ url_for('add_news') }}" class="sidebar-link">
+                <span class="link-icon"><i class="fas fa-newspaper"></i></span>
+                <span class="link-text">Publish Circular</span>
+            </a>
+            <a href="javascript:void(0)" onclick="openPasswordModal()" class="sidebar-link">
+                <span class="link-icon"><i class="fas fa-key"></i></span>
+                <span class="link-text">Change Password</span>
+            </a>
+            <a href="{{ url_for('admin_logout') }}" class="sidebar-link logout-link">
+                <span class="link-icon"><i class="fas fa-sign-out-alt"></i></span>
+                <span class="link-text">Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="portal-main-area">
+        <!-- Top Institutional Bar -->
+        <header class="portal-top-bar">
+            <div class="top-bar-left">
+                <span class="breadcrumb-tag">MVGR College of Engineering (A) &bull; Central Administrative Governance</span>
+            </div>
+            <div class="top-bar-right">
+                <div class="user-chip">
+                    <span class="user-badge-code" style="background:#8c1d24; color:#fff;">SUPER ADMIN</span>
+                    <span class="user-avatar-circle"><i class="fas fa-shield-alt"></i></span>
+                    <span class="user-name-display">{{ session.get('admin_name', 'NSS Program Officer') }}</span>
+                </div>
+                <button type="button" class="top-bar-pwd-btn" onclick="openPasswordModal()" title="Change Master Password">
+                    <i class="fas fa-key"></i> Password
+                </button>
+                <a href="{{ url_for('admin_logout') }}" class="top-bar-logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </header>
+
+        <div class="portal-content-container">
+            <!-- Welcome Header -->
+            <div class="welcome-header-card">
+                <h1 class="welcome-title">Administrative Governance Console</h1>
+                <p class="welcome-sub">Central oversight of all faculty coordinators, volunteer approvals, attendance logs, and institutional drives.</p>
+                <div class="student-meta-pills">
+                    <span class="meta-pill"><i class="fas fa-university"></i> MVGR College of Engineering (Autonomous)</span>
+                    <span class="meta-pill status-active"><i class="fas fa-user-shield"></i> Role: Head Administrator</span>
+                    <span class="meta-pill"><i class="fas fa-user-tie"></i> Faculty Coordinators: {{ stats.total_faculty }} Active</span>
+                    <span class="meta-pill" style="background:#fef7e0; color:#b78103;"><i class="fas fa-history"></i> {{ stats.total_audit_actions }} Logged Faculty Actions</span>
+                </div>
+            </div>
+
+            <!-- 4 Metric Cards -->
+            <div class="portal-stats-row" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="modern-stat-box">
+                    <div class="stat-icon-wrap blue">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-meta">
+                        <span class="stat-number">{{ stats.total_volunteers }}</span>
+                        <span class="stat-label">Total Volunteers ({{ stats.active_volunteers }} Active)</span>
+                    </div>
+                </div>
+
+                <div class="modern-stat-box">
+                    <div class="stat-icon-wrap gold">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-meta">
+                        <span class="stat-number">{{ stats.total_events }}</span>
+                        <span class="stat-label">Events ({{ stats.upcoming_events }} Upcoming)</span>
+                    </div>
+                </div>
+
+                <div class="modern-stat-box">
+                    <div class="stat-icon-wrap green">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-meta">
+                        <span class="stat-number">{{ stats.total_hours }} hrs</span>
+                        <span class="stat-label">Completed Service Hours</span>
+                    </div>
+                </div>
+
+                <div class="modern-stat-box">
+                    <div class="stat-icon-wrap" style="background: rgba(140, 29, 36, 0.1); color: var(--mvgr-crimson);">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stat-meta">
+                        <span class="stat-number">{{ stats.total_audit_actions }}</span>
+                        <span class="stat-label">Audit Trail Actions</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 CORE REQUIREMENT: FACULTY ACTIVITY & AUDIT TRAIL
+                 ═══════════════════════════════════════════════════════════════ -->
+            <div class="portal-panel full-width mb-2" id="auditTrailSection" style="margin-bottom: 28px; border-top: 3px solid var(--mvgr-gold);">
+                <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h3 style="font-size: 18px;">
+                            <i class="fas fa-clipboard-check gold-icon"></i> Faculty Activity & Audit Trail
+                        </h3>
+                        <p style="font-size: 12.5px; color: #72767d; margin-top: 3px;">
+                            Tracks which faculty coordinator has marked attendance, added events, approved hours, or made changes.
+                        </p>
+                    </div>
+
+                    <!-- Filter Buttons -->
+                    <div class="audit-filter-buttons" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <a href="{{ url_for('admin_dashboard') }}#auditTrailSection" class="btn-card-outline {% if current_filter == 'all' %}active-filter{% endif %}" style="font-size: 11.5px; padding: 4px 10px;">
+                            All Actions ({{ audit_logs|length }})
+                        </a>
+                        <a href="{{ url_for('admin_dashboard', filter='attendance') }}#auditTrailSection" class="btn-card-outline {% if current_filter == 'attendance' %}active-filter{% endif %}" style="font-size: 11.5px; padding: 4px 10px;">
+                            <i class="fas fa-clipboard-check"></i> Attendance
+                        </a>
+                        <a href="{{ url_for('admin_dashboard', filter='event') }}#auditTrailSection" class="btn-card-outline {% if current_filter == 'event' %}active-filter{% endif %}" style="font-size: 11.5px; padding: 4px 10px;">
+                            <i class="fas fa-calendar-plus"></i> Events
+                        </a>
+                        <a href="{{ url_for('admin_dashboard', filter='news') }}#auditTrailSection" class="btn-card-outline {% if current_filter == 'news' %}active-filter{% endif %}" style="font-size: 11.5px; padding: 4px 10px;">
+                            <i class="fas fa-bullhorn"></i> News
+                        </a>
+                        <a href="{{ url_for('admin_dashboard', filter='approval') }}#auditTrailSection" class="btn-card-outline {% if current_filter == 'approval' %}active-filter{% endif %}" style="font-size: 11.5px; padding: 4px 10px;">
+                            <i class="fas fa-check-double"></i> Approvals
+                        </a>
+                    </div>
+                </div>
+
+                <div class="panel-body p-0">
+                    {% if audit_logs %}
+                    <table class="portal-modern-table">
+                        <thead>
+                            <tr>
+                                <th>Faculty Coordinator</th>
+                                <th>Action Performed</th>
+                                <th>Target / Activity</th>
+                                <th>Details / Changes Made</th>
+                                <th>Date & Time</th>
+                                <th>Audit Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in audit_logs %}
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 34px; height: 34px; border-radius: 50%; background: #191b1f; color: #e8c77b; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;">
+                                            {{ log.faculty_name[0] }}
+                                        </div>
+                                        <div>
+                                            <span style="font-weight: 600; color: #191b1f; display: block; font-size: 13.5px;">{{ log.faculty_name }}</span>
+                                            <span style="font-size: 11px; color: #72767d;">ID: <code>{{ log.faculty_id }}</code> &bull; {{ log.department }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if 'Attendance' in log.action_type %}
+                                    <span class="status-verified-pill" style="background:#e8f5e9; color:#2e7d32;">
+                                        <i class="fas fa-clipboard-check"></i> Marked Attendance
+                                    </span>
+                                    {% elif 'Event' in log.action_type %}
+                                    <span class="status-verified-pill" style="background:#fef7e0; color:#b78103;">
+                                        <i class="fas fa-calendar-plus"></i> Scheduled Event
+                                    </span>
+                                    {% elif 'News' in log.action_type %}
+                                    <span class="status-verified-pill" style="background:#e3f2fd; color:#1565c0;">
+                                        <i class="fas fa-bullhorn"></i> Published News
+                                    </span>
+                                    {% elif 'Approval' in log.action_type %}
+                                    <span class="status-verified-pill" style="background:#ede7f6; color:#512da8;">
+                                        <i class="fas fa-check-circle"></i> Approved Hours
+                                    </span>
+                                    {% else %}
+                                    <span class="status-verified-pill" style="background:#f5f5f5; color:#424242;">
+                                        <i class="fas fa-edit"></i> {{ log.action_type }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="fw-600" style="color: #2c2f35; font-size: 13px;">{{ log.target }}</span>
+                                </td>
+                                <td>
+                                    <span style="font-size: 12.5px; color: #494d55;">{{ log.description }}</span>
+                                </td>
+                                <td>
+                                    <span style="font-size: 12px; color: #666; white-space: nowrap;">
+                                        <i class="far fa-clock" style="color:#af8d44;"></i> {{ log.timestamp }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-verified-pill" style="background:#e8f5e9; color:#2e7d32;">
+                                        <i class="fas fa-shield-alt"></i> Logged
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-portal-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>No faculty activity logs found for this filter.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Faculty Coordinator Summary Cards -->
+            <div class="portal-panel full-width mb-2" style="margin-bottom: 24px;">
+                <div class="panel-header">
+                    <h3><i class="fas fa-chalkboard-teacher gold-icon"></i> Faculty Coordinators Oversight</h3>
+                    <span class="panel-counter">{{ faculty_summary|length }} Faculty Members</span>
+                </div>
+                <div class="panel-body">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                        {% for item in faculty_summary %}
+                        <div class="modern-stat-box" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div class="stat-icon-wrap gold" style="width: 40px; height: 40px; font-size: 16px;">
+                                        <i class="fas fa-user-tie"></i>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 14.5px; font-weight: 700; color: #191b1f;">{{ item.name }}</span>
+                                        <span style="font-size: 11px; color: #72767d; display: block;"><code>{{ item.faculty_id }}</code> &bull; {{ item.department }}</span>
+                                    </div>
+                                </div>
+                                <span class="credit-pill" style="font-size: 11px;">{{ item.total_actions }} Actions</span>
+                            </div>
+                            <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                                <span><i class="far fa-envelope"></i> {{ item.email }}</span><br>
+                                <span style="font-size: 11px; color: #888;"><i class="far fa-clock"></i> Last Active: {{ item.last_action }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Split Grid: Volunteers & Events -->
+            <div class="portal-split-grid">
+                <!-- Volunteers -->
+                <div class="portal-panel">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-users gold-icon"></i> Volunteer Registry</h3>
+                        <a href="{{ url_for('volunteer_list') }}" class="btn-card-outline">All Volunteers &rarr;</a>
+                    </div>
+                    <div class="panel-body p-0">
+                        <table class="portal-modern-table">
+                            <thead>
+                                <tr><th>Name</th><th>Roll No</th><th>Branch</th><th>Credits</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for vol in volunteers[-5:] | reverse %}
+                                <tr>
+                                    <td class="fw-600">{{ vol.name }}</td>
+                                    <td><code>{{ vol.roll_no }}</code></td>
+                                    <td>{{ vol.branch }}</td>
+                                    <td><span class="credit-pill">{{ vol.hours_completed }} hrs</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Events -->
+                <div class="portal-panel">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-calendar-alt gold-icon"></i> Drives & Camps</h3>
+                        <a href="{{ url_for('event_list') }}" class="btn-card-outline">Manage Events &rarr;</a>
+                    </div>
+                    <div class="panel-body p-0">
+                        <table class="portal-modern-table">
+                            <thead>
+                                <tr><th>Drive Title</th><th>Date</th><th>Quota</th><th>Status</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for event in events[:5] %}
+                                <tr>
+                                    <td class="fw-600">{{ event.title[:22] }}...</td>
+                                    <td>{{ event.date }}</td>
+                                    <td>{{ event.registered_volunteers|length }}/{{ event.max_volunteers }}</td>
+                                    <td>
+                                        <span class="status-verified-pill" style="{% if event.status == 'upcoming' %}background:#fef7e0; color:#b78103;{% endif %}">
+                                            {{ event.status|capitalize }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}News & Announcements{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div class="container"><h1>News & Announcements</h1>
+    <p>Stay informed about NSS activities and updates</p>
+    <nav class="breadcrumb"><a href="/">Home</a> <i class="fas fa-chevron-right"></i> News</nav></div>
+</section>
+<section class="section">
+    <div class="container">
+        {% if session.get('admin') %}
+        <div class="admin-bar"><a href="{{ url_for('add_news') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Add News</a></div>
+        {% endif %}
+        <div class="news-filter">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="announcement">Announcements</button>
+            <button class="filter-btn" data-filter="event">Events</button>
+            <button class="filter-btn" data-filter="activity">Activities</button>
+        </div>
+        <div class="news-full-grid">
+            {% for item in news_items %}
+            <div class="news-full-card {{ item.category }}">
+                <div class="news-card-left">
+                    <span class="news-category {{ item.category }}">{{ item.category }}</span>
+                    <span class="news-date"><i class="fas fa-calendar"></i> {{ item.date }}</span>
+                </div>
+                <div class="news-card-right">
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.content }}</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state"><i class="fas fa-newspaper"></i><p>No news items yet.</p></div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

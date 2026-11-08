@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Gallery{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div class="container"><h1>Photo Gallery</h1><p>Moments of service and dedication</p>
+    <nav class="breadcrumb"><a href="/">Home</a> <i class="fas fa-chevron-right"></i> Gallery</nav></div>
+</section>
+<section class="section">
+    <div class="container">
+        <div class="gallery-filter">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="environment">Environment</button>
+            <button class="filter-btn" data-filter="health">Health</button>
+            <button class="filter-btn" data-filter="camp">Camp</button>
+            <button class="filter-btn" data-filter="education">Education</button>
+            <button class="filter-btn" data-filter="community">Community</button>
+        </div>
+        <div class="gallery-grid">
+            {% for item in gallery_items %}
+            <div class="gallery-item {{ item.category }}">
+                <div class="gallery-placeholder">
+                    <i class="fas {% if item.category == 'environment' %}fa-leaf{% elif item.category == 'health' %}fa-heartbeat{% elif item.category == 'camp' %}fa-campground{% elif item.category == 'education' %}fa-graduation-cap{% else %}fa-hands-helping{% endif %}"></i>
+                    <div class="gallery-overlay">
+                        <p>{{ item.title }}</p>
+                        <span class="gallery-category">{{ item.category }}</span>
+                    </div>
+                </div>
+                <div class="gallery-caption">{{ item.title }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</section>
+{% endblock %}
