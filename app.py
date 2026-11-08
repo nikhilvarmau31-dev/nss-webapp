@@ -483,9 +483,9 @@ def volunteer_list():
     return render_template('volunteers.html', volunteers=volunteers)
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register', methods=['GET', 'POST', 'HEAD'])
 def register():
-    if request.method == 'GET':
+    if request.method in ('GET', 'HEAD'):
         return redirect(url_for('login', tab='register', **request.args))
 
     roll_no = request.form.get('roll_no', '').strip().upper()
