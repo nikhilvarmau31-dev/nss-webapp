@@ -12,16 +12,29 @@ class VercelWSGIMiddleware:
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        qs = environ.get('QUERY_STRING', '')
-        if '__path=' in qs:
-            params = parse_qs(qs, keep_blank_values=True)
+        path_info = environ.get('PATH_INFO', '')
+        query_string = environ.get('QUERY_STRING', '')
+
+        # In Vercel serverless runtime, query string might be baked into PATH_INFO
+        if '?' in path_info:
+            path_part, _, qs_part = path_info.partition('?')
+            path_info = path_part
+            if not query_string:
+                query_string = qs_part
+            else:
+                query_string = f"{qs_part}&{query_string}"
+
+        if '__path=' in query_string:
+            params = parse_qs(query_string, keep_blank_values=True)
             if '__path' in params:
                 raw_path = params.pop('__path')[0]
-                environ['PATH_INFO'] = ('/' + raw_path.lstrip('/')) if raw_path else '/'
-                environ['QUERY_STRING'] = urlencode(params, doseq=True)
-        elif environ.get('PATH_INFO', '') in ('/api/index', '/api/index/'):
-            environ['PATH_INFO'] = '/'
+                path_info = ('/' + raw_path.lstrip('/')) if raw_path else '/'
+                query_string = urlencode(params, doseq=True)
+        elif path_info in ('/api/index', '/api/index/'):
+            path_info = '/'
 
+        environ['PATH_INFO'] = path_info
+        environ['QUERY_STRING'] = query_string
         environ['SCRIPT_NAME'] = ''
 
         return self.wsgi_app(environ, start_response)
