@@ -120,23 +120,70 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ─── Animate cards on scroll (Intersection Observer) ─────
-    const cards = document.querySelectorAll('.activity-card, .event-card, .news-card, .stat-card, .benefit-card');
-    const cardObserver = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-                cardObserver.unobserve(entry.target);
+    // ─── Instant Navigation Feedback & Mobile Drawer ──────────
+    const navLinks = document.querySelectorAll('.nav-links li a');
+    const menuToggle = document.getElementById('menu-toggle');
+
+    navLinks.forEach(function (link) {
+        // Immediate visual active switch on click/tap
+        link.addEventListener('click', function () {
+            const href = this.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+            // Remove active class from all links and highlight the clicked link immediately
+            navLinks.forEach(function (l) { l.classList.remove('active'); });
+            this.classList.add('active');
+
+            // On mobile drawer, smoothly close menu after instant click confirmation
+            if (menuToggle && menuToggle.checked) {
+                setTimeout(function () {
+                    menuToggle.checked = false;
+                }, 100);
             }
         });
-    }, { threshold: 0.1 });
-    cards.forEach(function (card) {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-        cardObserver.observe(card);
+
+        // Fast hover & touch prefetcher for instant page transitions
+        const prefetchPage = function () {
+            const href = link.getAttribute('href');
+            if (href && !href.startsWith('#') && !href.startsWith('javascript:') && !link.dataset.prefetched) {
+                link.dataset.prefetched = 'true';
+                const p = document.createElement('link');
+                p.rel = 'prefetch';
+                p.href = href;
+                document.head.appendChild(p);
+            }
+        };
+        link.addEventListener('mouseenter', prefetchPage, { passive: true });
+        link.addEventListener('touchstart', prefetchPage, { passive: true });
     });
+
+    // ─── Animate cards on scroll (Intersection Observer) ─────
+    const cards = document.querySelectorAll('.activity-card, .event-card, .news-card, .stat-card, .benefit-card');
+    if ('IntersectionObserver' in window) {
+        const cardObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                    cardObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.08 });
+
+        cards.forEach(function (card) {
+            const rect = card.getBoundingClientRect();
+            // If already in or near viewport, show immediately with zero delay
+            if (rect.top < window.innerHeight + 80) {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            } else {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(16px)';
+                card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                cardObserver.observe(card);
+            }
+        });
+    }
 });
 
 // ─── Month name helper (injected via Jinja, but also client-side fallback)

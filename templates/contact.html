@@ -2,8 +2,16 @@
 {% block title %}Contact Us{% endblock %}
 {% block content %}
 <section class="page-header">
-    <div class="container"><h1>Contact Us</h1><p>Get in touch with our NSS unit</p>
-    <nav class="breadcrumb"><a href="/">Home</a> <i class="fas fa-chevron-right"></i> Contact</nav></div>
+    <div class="container">
+        <div class="page-header-logos">
+            <img src="{{ url_for('static', filename='images/mvgr_logo.png') }}" alt="MVGR Crest" class="page-header-crest" width="52" height="52">
+            <img src="{{ url_for('static', filename='images/nss_logo_real.svg') }}" alt="NSS Logo" class="page-header-logo" width="50" height="50">
+        </div>
+        <div class="page-header-inst-sub">Maharaj Vijayaram Gajapathi Raj College of Engineering (A)</div>
+        <h1>Contact Us</h1>
+        <p>Get in touch with our NSS unit</p>
+        <nav class="breadcrumb"><a href="/">Home</a> <i class="fas fa-chevron-right"></i> Contact</nav>
+    </div>
 </section>
 <section class="section">
     <div class="container">
