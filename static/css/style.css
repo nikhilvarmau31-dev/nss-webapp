@@ -1760,46 +1760,62 @@ button.btn { font-family: inherit; }
   .sidebar-nav {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .sidebar-nav::-webkit-scrollbar {
+    display: none;
   }
   .sidebar-nav-btn {
     width: auto !important;
-    padding: 8px 12px !important;
+    padding: 7px 14px !important;
     font-size: 13px !important;
     border-radius: 6px !important;
     gap: 8px !important;
     margin-top: 0 !important;
-    flex-shrink: 0;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
   }
   .sidebar-nav-btn.logout-link {
     margin-top: 0 !important;
   }
   .portal-top-bar {
     height: auto !important;
-    min-height: 48px;
+    min-height: 44px;
     padding: 8px 14px !important;
     display: flex !important;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
     overflow: hidden;
   }
   .portal-top-bar .top-bar-left {
-    display: none !important; /* Hide long institutional breadcrumb on mobile so it never wraps into next lines or overlaps content */
+    display: none !important;
   }
   .portal-top-bar .top-bar-right {
     width: 100%;
+    display: flex;
+    align-items: center;
     justify-content: space-between;
     gap: 8px;
-    flex-wrap: wrap;
+  }
+  .portal-top-bar .top-bar-pwd-btn {
+    display: none !important; /* Already available in sidebar nav */
+  }
+  .portal-top-bar .top-bar-logout-btn {
+    padding: 5px 12px;
+    font-size: 12px;
+    white-space: nowrap;
   }
   .portal-top-bar .user-chip {
-    padding: 3px 10px;
+    padding: 3px 8px;
+    max-width: 70%;
   }
   .portal-top-bar .user-name-display {
-    max-width: 130px;
+    max-width: 110px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
