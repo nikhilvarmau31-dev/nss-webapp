@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from datetime import datetime, timedelta
 import json
 import os
@@ -449,6 +449,14 @@ def log_faculty_action(faculty_name, faculty_id, action_type, description, targe
     db.insert_audit_log(log_entry)
 
 
+def get_current_events():
+    global events
+    fresh = db.fetch_events(events)
+    if fresh:
+        events = fresh
+    return events
+
+
 # ─── Routes ───────────────────────────────────────────────────────────────────
 
 @app.route('/')
@@ -675,41 +683,76 @@ def delete_event(event_id):
 
 @app.route('/events/<int:event_id>')
 def event_detail(event_id):
-    event = next((e for e in events if e['id'] == event_id), None)
+    current_events = get_current_events()
+    event = next((e for e in current_events if e['id'] == event_id), None)
     if not event:
         flash('Event not found.', 'danger')
         return redirect(url_for('event_list'))
-    return render_template('event_detail.html', event=event)
+    
+    clean_roll = session.get('student', '').strip().upper() if session.get('student') else ''
+    is_registered = bool(clean_roll and any(r.strip().upper() == clean_roll for r in event.get('registered_volunteers', [])))
+    return render_template('event_detail.html', event=event, is_registered=is_registered)
 
 
 @app.route('/events/<int:event_id>/register', methods=['POST'])
 def register_for_event(event_id):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json or 'application/json' in request.headers.get('Accept', '')
+
     if not session.get('student'):
+        if is_ajax:
+            return jsonify({'status': 'warning', 'message': 'Please sign in to your student account to register for events.', 'redirect': url_for('login', tab='student')}), 401
         flash('Please sign in to your student account to register for events.', 'warning')
         return redirect(url_for('login', tab='student', next=url_for('event_detail', event_id=event_id)))
 
-    event = next((e for e in events if e['id'] == event_id), None)
     roll_no = session.get('student', '').strip().upper()
-    volunteer = next((v for v in volunteers if v['roll_no'].upper() == roll_no), None)
+    volunteer = db.get_volunteer_by_roll_no(roll_no)
     if not volunteer:
-        volunteer = db.get_volunteer_by_roll_no(roll_no)
+        volunteer = next((v for v in volunteers if v['roll_no'].upper() == roll_no), None)
         if volunteer and not any(v['roll_no'].upper() == roll_no for v in volunteers):
             volunteers.append(volunteer)
 
-    if not event:
-        flash('Event not found.', 'danger')
-    elif not volunteer:
+    if not volunteer:
+        if is_ajax:
+            return jsonify({'status': 'danger', 'message': 'Volunteer record not found. Please log in again.'}), 401
         flash('Volunteer record not found. Please log in again.', 'danger')
         return redirect(url_for('login', tab='student', next=url_for('event_detail', event_id=event_id)))
-    elif roll_no in event.get('registered_volunteers', []):
+
+    # Fetch fresh events directly from Supabase for real-time accurate volunteer count
+    current_events = get_current_events()
+    event = next((e for e in current_events if e['id'] == event_id), None)
+    if not event:
+        if is_ajax:
+            return jsonify({'status': 'danger', 'message': 'Event not found.'}), 404
+        flash('Event not found.', 'danger')
+        return redirect(url_for('event_list'))
+
+    registered = event.get('registered_volunteers') or []
+    if any(r.strip().upper() == roll_no for r in registered):
+        if is_ajax:
+            return jsonify({'status': 'info', 'message': 'You are already registered for this event.', 'already_registered': True})
         flash('You are already registered for this event.', 'info')
-    elif len(event.get('registered_volunteers', [])) >= event.get('max_volunteers', 0):
+    elif len(registered) >= event.get('max_volunteers', 0):
+        if is_ajax:
+            return jsonify({'status': 'danger', 'message': 'This event has reached full capacity.'}), 400
         flash('This event has reached full capacity.', 'danger')
     else:
-        if 'registered_volunteers' not in event:
-            event['registered_volunteers'] = []
-        event['registered_volunteers'].append(roll_no)
-        db.update_event_record(event_id, {'registered_volunteers': event['registered_volunteers']})
+        if roll_no not in registered:
+            registered.append(roll_no)
+        event['registered_volunteers'] = registered
+        db.update_event_record(event_id, {'registered_volunteers': registered})
+        if is_ajax:
+            return jsonify({
+                'status': 'success',
+                'message': f'Successfully registered for "{event["title"]}"!',
+                'event_id': event_id,
+                'event_title': event.get('title', ''),
+                'date': event.get('date', ''),
+                'time': event.get('time', ''),
+                'venue': event.get('venue', ''),
+                'hours': event.get('hours', 0),
+                'registered_count': len(registered),
+                'max_volunteers': event.get('max_volunteers', 0)
+            })
         flash(f'Successfully registered for "{event["title"]}"!', 'success')
 
     ref = request.referrer
@@ -1337,15 +1380,32 @@ def student_dashboard():
         flash('Please login with your roll number to access the student portal.', 'warning')
         return redirect(url_for('login', tab='student'))
     
-    volunteer = next((v for v in volunteers if v['roll_no'].upper() == roll_no.upper()), None)
+    clean_roll = roll_no.strip().upper()
+    volunteer = db.get_volunteer_by_roll_no(clean_roll)
+    if not volunteer:
+        volunteer = next((v for v in volunteers if v['roll_no'].upper() == clean_roll), None)
+        
     if not volunteer:
         session.pop('student', None)
         flash('Volunteer profile not found.', 'danger')
         return redirect(url_for('login', tab='student'))
     
-    my_events = [e for e in events if volunteer['roll_no'] in e.get('registered_volunteers', [])]
-    available_events = [e for e in events if e.get('status') == 'upcoming' and volunteer['roll_no'] not in e.get('registered_volunteers', [])]
-    my_attendance = [a for a in attendance_records if volunteer['roll_no'] in a.get('present', [])]
+    # Always query real-time event records directly from Supabase
+    current_events = get_current_events()
+    
+    # Case-insensitive trimmed check
+    my_events = [
+        e for e in current_events 
+        if any(r.strip().upper() == clean_roll for r in e.get('registered_volunteers', []))
+    ]
+    available_events = [
+        e for e in current_events 
+        if e.get('status') == 'upcoming' and not any(r.strip().upper() == clean_roll for r in e.get('registered_volunteers', []))
+    ]
+    my_attendance = [
+        a for a in attendance_records 
+        if any(r.strip().upper() == clean_roll for r in a.get('present', []))
+    ]
     
     target_hours = 120
     progress_pct = min(100, int((volunteer.get('hours_completed', 0) / target_hours) * 100))

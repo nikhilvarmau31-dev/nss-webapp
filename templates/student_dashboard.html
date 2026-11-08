@@ -297,6 +297,58 @@
                  PANEL 2: AVAILABLE DRIVES TO JOIN
                  ═══════════════════════════════════════════════════════════════ -->
             <section id="student-panel-events" class="student-panel-section" style="display:none;">
+                <!-- Section 1: My Enrolled Drives -->
+                <div class="portal-panel full-width mb-3">
+                    <div class="panel-header" style="background:#fdfcf9; border-bottom:1.5px solid #eee8d5;">
+                        <div>
+                            <h3><i class="fas fa-bookmark gold-icon"></i> My Enrolled Drives ({{ my_events|length }})</h3>
+                            <p style="font-size:13px; color:#777; margin-top:4px;">Drives you have registered for and will participate in to earn NSS service hours.</p>
+                        </div>
+                        <span class="panel-counter" style="background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9;">
+                            <i class="fas fa-check-circle"></i> {{ my_events|length }} Enrolled
+                        </span>
+                    </div>
+
+                    <div class="panel-body">
+                        {% if my_events %}
+                            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:18px;">
+                                {% for event in my_events %}
+                                <div class="student-event-card" style="border-top:3.5px solid #2e7d32; background:#fbfdfb; height:100%; display:flex; flex-direction:column; justify-content:space-between;">
+                                    <div>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                            <span style="font-size:11.5px; font-weight:700; color:#2e7d32; background:#e8f5e9; padding:4px 10px; border-radius:12px; border:1px solid #c8e6c9;">
+                                                <i class="fas fa-check-circle"></i> Enrolled & Confirmed
+                                            </span>
+                                            <span class="hours-tag" style="background:rgba(175,141,68,0.12); color:var(--mvgr-gold); font-size:12px; padding:3px 8px; border-radius:6px; font-weight:700;">
+                                                <i class="fas fa-hourglass-half"></i> {{ event.hours }} Hrs Credit
+                                            </span>
+                                        </div>
+                                        <h4 class="event-card-title" style="font-size:16.5px; margin-bottom:8px; color:#18191c;">{{ event.title }}</h4>
+                                        <p class="event-short-desc" style="font-size:13px; color:#555; line-height:1.5; margin-bottom:12px;">{{ event.description }}</p>
+                                        <div class="event-card-meta" style="margin-bottom:12px;">
+                                            <span><i class="far fa-calendar"></i> {{ event.date }}</span>
+                                            <span><i class="far fa-clock"></i> {{ event.time }}</span>
+                                            <span><i class="fas fa-map-marker-alt"></i> {{ event.venue }}</span>
+                                        </div>
+                                    </div>
+                                    <div style="font-size:12.5px; color:#555; background:#fff; padding:8px 12px; border-radius:6px; border:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                                        <span><i class="fas fa-id-badge" style="color:var(--mvgr-gold);"></i> Roll: <strong>{{ volunteer.roll_no }}</strong></span>
+                                        <span style="color:#2e7d32; font-size:12px; font-weight:600;"><i class="fas fa-shield-alt"></i> Verified</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-portal-state" style="padding:22px;">
+                                <i class="far fa-calendar-times"></i>
+                                <h4>No Drives Enrolled Yet</h4>
+                                <p>Browse the available drives below and click <strong>Enroll for Drive</strong> to participate.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Section 2: Open Drives Available to Join -->
                 <div class="portal-panel full-width">
                     <div class="panel-header">
                         <div>
@@ -324,7 +376,7 @@
                                             <span class="hours-tag"><i class="fas fa-hourglass-half"></i> +{{ event.hours }} Hours</span>
                                         </div>
                                     </div>
-                                    <form method="POST" action="{{ url_for('register_for_event', event_id=event.id) }}">
+                                    <form method="POST" action="{{ url_for('register_for_event', event_id=event.id) }}" class="enroll-event-form">
                                         <input type="hidden" name="roll_no" value="{{ volunteer.roll_no }}">
                                         <button type="submit" class="btn-portal-gold" style="width:100%; justify-content:center;">
                                             <i class="fas fa-user-plus"></i> Enroll for Drive &rarr;
@@ -468,12 +520,52 @@ function switchStudentPanel(tabName) {
 }
 window.switchStudentPanel = switchStudentPanel;
 
-// Initial hash check
+// Initial hash check and instant enroll AJAX handler
 document.addEventListener('DOMContentLoaded', function() {
     const hash = window.location.hash.replace('#', '');
     if (hash && document.getElementById('student-panel-' + hash)) {
         switchStudentPanel(hash);
     }
+
+    // Ultra-fast instant event registration
+    document.querySelectorAll('.enroll-event-form').forEach(form => {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enrolling...';
+
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new FormData(this)
+                });
+                const data = await response.json();
+                if (data.status === 'success' || data.already_registered) {
+                    btn.style.background = '#e8f5e9';
+                    btn.style.color = '#2e7d32';
+                    btn.style.border = '1.5px solid #a5d6a7';
+                    btn.innerHTML = '<i class="fas fa-check-circle"></i> Enrolled & Confirmed';
+
+                    // Smooth reload to immediately reflect in all enrolled counters and stacks
+                    setTimeout(() => {
+                        window.location.hash = 'events';
+                        window.location.reload();
+                    }, 350);
+                } else {
+                    alert(data.message || 'Could not enroll for drive. Please try again.');
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            } catch(err) {
+                this.submit();
+            }
+        });
+    });
 });
 </script>
 {% endblock %}
