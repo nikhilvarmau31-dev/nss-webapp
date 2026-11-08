@@ -495,8 +495,10 @@ def register():
             return render_template('register.html')
             
         existing = next((v for v in volunteers if v['roll_no'].upper() == roll_no), None)
+        if not existing:
+            existing = db.get_volunteer_by_roll_no(roll_no)
         if existing:
-            flash(f'A volunteer with Roll Number "{roll_no}" already exists. Please log in.', 'danger')
+            flash(f'Volunteer with Roll Number "{roll_no}" is already registered. Please sign in with your password.', 'info')
             return redirect(url_for('login', tab='student', roll=roll_no))
 
         volunteer = {
@@ -512,10 +514,15 @@ def register():
             'address': request.form.get('address', 'MVGR Campus'),
             'joined_date': datetime.now().strftime('%Y-%m-%d'),
             'hours_completed': 0,
+            'hours': 0,
             'status': 'active'
         }
-        volunteers.append(volunteer)
-        db.insert_volunteer(volunteer)
+        saved_vol = db.insert_volunteer(volunteer)
+        if saved_vol and isinstance(saved_vol, dict):
+            volunteer['id'] = saved_vol.get('id', volunteer['id'])
+        if not any(v['roll_no'].upper() == roll_no for v in volunteers):
+            volunteers.append(volunteer)
+            
         session['student'] = volunteer['roll_no']
         session['student_name'] = volunteer['name']
         session['user_email'] = volunteer['email']
@@ -1029,7 +1036,16 @@ def login():
         elif login_type == 'student':
             roll_no = request.form.get('roll_no', '').strip().upper()
             password = request.form.get('password', '').strip()
+            
+            # Find in local memory or query directly from Supabase
             vol = next((v for v in volunteers if v['roll_no'].upper() == roll_no), None)
+            if not vol:
+                db_vol = db.get_volunteer_by_roll_no(roll_no)
+                if db_vol:
+                    vol = db_vol
+                    if not any(v['roll_no'].upper() == roll_no for v in volunteers):
+                        volunteers.append(vol)
+
             if vol:
                 vol_pass = vol.get('password', 'password123')
                 if password and password != vol_pass and password not in ('password123', 'student123'):
@@ -1044,7 +1060,7 @@ def login():
                 flash(f'Welcome back, {vol["name"]}! Logged in to Student User Mode.', 'success')
                 return redirect(url_for('student_dashboard'))
             else:
-                flash(f'No volunteer found with Roll Number "{roll_no}". Please register below.', 'danger')
+                flash(f'No registered volunteer found with Roll Number "{roll_no}". Please verify your roll number or register below.', 'danger')
                 return redirect(url_for('login', tab='register', roll=roll_no))
         
         # 5. Volunteer Quick Registration
@@ -1065,8 +1081,10 @@ def login():
                 return redirect(url_for('login', tab='register', roll=roll_no, name=name))
             
             existing = next((v for v in volunteers if v['roll_no'].upper() == roll_no), None)
+            if not existing:
+                existing = db.get_volunteer_by_roll_no(roll_no)
             if existing:
-                flash(f'Volunteer with Roll Number {roll_no} already exists! Please log in.', 'warning')
+                flash(f'Volunteer with Roll Number "{roll_no}" is already registered! Please sign in with your password.', 'info')
                 return redirect(url_for('login', tab='student', roll=roll_no))
             
             vol = {
@@ -1082,10 +1100,15 @@ def login():
                 'address': address,
                 'joined_date': datetime.now().strftime('%Y-%m-%d'),
                 'hours_completed': 0,
+                'hours': 0,
                 'status': 'active'
             }
-            volunteers.append(vol)
-            db.insert_volunteer(vol)
+            saved_vol = db.insert_volunteer(vol)
+            if saved_vol and isinstance(saved_vol, dict):
+                vol['id'] = saved_vol.get('id', vol['id'])
+            if not any(v['roll_no'].upper() == roll_no for v in volunteers):
+                volunteers.append(vol)
+                
             session['student'] = vol['roll_no']
             session['student_name'] = vol['name']
             session['user_email'] = vol['email']

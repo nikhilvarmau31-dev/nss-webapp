@@ -20,8 +20,8 @@
         <div class="login-elevated-card">
             <!-- EXACTLY 2 LOGINS DISPLAYED IN TABS -->
             <div class="login-nav-tabs">
-                <button type="button" class="login-tab-btn {% if active_tab not in ('faculty', 'faculty-register', 'faculty-verify') %}active{% endif %}" data-tab="student">
-                    Student Login
+                <button type="button" class="login-tab-btn {% if active_tab not in ('faculty', 'faculty-register', 'faculty-verify') %}active{% endif %}" data-tab="student" id="btn-tab-student">
+                    {% if active_tab == 'register' %}Volunteer Register{% else %}Student Login{% endif %}
                 </button>
                 <button type="button" class="login-tab-btn {% if active_tab in ('faculty', 'faculty-register', 'faculty-verify') %}active{% endif %}" data-tab="faculty">
                     Faculty Login
@@ -38,7 +38,7 @@
                     <input type="hidden" name="login_type" value="student">
                     <div class="modern-input-group">
                         <span class="input-icon"><i class="far fa-user"></i></span>
-                        <input type="text" name="roll_no" class="modern-input" placeholder="Roll Number (e.g. 21331A0501)" required autocomplete="username">
+                        <input type="text" name="roll_no" class="modern-input" placeholder="Roll Number (e.g. 21331A0501)" required autocomplete="username" value="{{ request.args.get('roll', '') }}">
                     </div>
                     <div class="modern-input-group">
                         <span class="input-icon"><i class="fas fa-lock"></i></span>
@@ -88,11 +88,11 @@
                     <input type="hidden" name="login_type" value="register">
                     <div class="modern-input-group">
                         <span class="input-icon"><i class="far fa-user"></i></span>
-                        <input type="text" name="name" class="modern-input" placeholder="Full Name" required>
+                        <input type="text" name="name" class="modern-input" placeholder="Full Name" required value="{{ request.args.get('name', '') }}">
                     </div>
                     <div class="modern-input-group">
                         <span class="input-icon"><i class="fas fa-id-card"></i></span>
-                        <input type="text" name="roll_no" class="modern-input" placeholder="Roll Number (e.g. 21331A0501)" required>
+                        <input type="text" name="roll_no" class="modern-input" placeholder="Roll Number (e.g. 21331A0501)" required value="{{ request.args.get('roll', '') }}">
                     </div>
                     <div class="modern-input-row">
                         <div class="modern-input-group half">
@@ -264,7 +264,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabPanes = document.querySelectorAll('.tab-pane');
     const switchLinks = document.querySelectorAll('.switch-tab-link');
 
+    const studentTabBtn = document.getElementById('btn-tab-student');
+
     function activateTab(tabId) {
+        if (studentTabBtn) {
+            studentTabBtn.textContent = (tabId === 'register') ? 'Volunteer Register' : 'Student Login';
+        }
         tabBtns.forEach(btn => {
             const btnTab = btn.getAttribute('data-tab');
             if ((tabId === 'student' || tabId === 'register') && btnTab === 'student') {

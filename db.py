@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 
 # Load local environment variables if .env exists
@@ -31,17 +32,60 @@ def fetch_volunteers(fallback_list):
         return fallback_list
     try:
         res = supabase_client.table('volunteers').select('*').order('id').execute()
-        return res.data if res.data else fallback_list
+        if res.data:
+            # Map Supabase 'hours' column to 'hours_completed' for app compatibility
+            for v in res.data:
+                v['hours_completed'] = v.get('hours', v.get('hours_completed', 0))
+                v['hours'] = v.get('hours_completed', 0)
+            return res.data
+        return fallback_list
     except Exception as e:
         print(f"Supabase fetch_volunteers error: {e}")
         return fallback_list
 
+def get_volunteer_by_roll_no(roll_no):
+    if not is_connected() or not roll_no:
+        return None
+    try:
+        clean_roll = roll_no.strip().upper()
+        res = supabase_client.table('volunteers').select('*').ilike('roll_no', clean_roll).execute()
+        if res.data and len(res.data) > 0:
+            v = res.data[0]
+            v['hours_completed'] = v.get('hours', v.get('hours_completed', 0))
+            v['hours'] = v.get('hours_completed', 0)
+            return v
+    except Exception as e:
+        print(f"Supabase get_volunteer_by_roll_no error: {e}")
+    return None
+
 def insert_volunteer(volunteer_dict):
+    # Ensure both hours and hours_completed exist
+    hours = volunteer_dict.get('hours_completed', volunteer_dict.get('hours', 0))
+    volunteer_dict['hours_completed'] = hours
+    volunteer_dict['hours'] = hours
     if is_connected():
         try:
-            res = supabase_client.table('volunteers').insert(volunteer_dict).execute()
-            if res.data:
-                return res.data[0]
+            # Clean payload specifically mapped to Supabase 'volunteers' columns:
+            payload = {
+                'roll_no': volunteer_dict['roll_no'].strip().upper(),
+                'name': volunteer_dict['name'].strip(),
+                'email': volunteer_dict['email'].strip(),
+                'phone': volunteer_dict.get('phone', '').strip(),
+                'password': volunteer_dict.get('password', 'password123'),
+                'branch': volunteer_dict.get('branch', 'CSE'),
+                'year': volunteer_dict.get('year', '1st Year'),
+                'blood_group': volunteer_dict.get('blood_group', 'O+'),
+                'address': volunteer_dict.get('address', 'MVGR Campus'),
+                'joined_date': volunteer_dict.get('joined_date', datetime.now().strftime('%Y-%m-%d') if 'datetime' in globals() else '2026-11-08'),
+                'hours': hours,
+                'status': volunteer_dict.get('status', 'active')
+            }
+            res = supabase_client.table('volunteers').insert(payload).execute()
+            if res.data and len(res.data) > 0:
+                inserted = res.data[0]
+                inserted['hours_completed'] = inserted.get('hours', hours)
+                volunteer_dict.update(inserted)
+                return inserted
         except Exception as e:
             print(f"Supabase insert_volunteer error: {e}")
     return volunteer_dict
@@ -49,7 +93,11 @@ def insert_volunteer(volunteer_dict):
 def update_volunteer_record(roll_no, updates):
     if is_connected():
         try:
-            supabase_client.table('volunteers').update(updates).eq('roll_no', roll_no).execute()
+            # Remap hours_completed to hours if present
+            if 'hours_completed' in updates and 'hours' not in updates:
+                updates['hours'] = updates['hours_completed']
+            clean_updates = {k: v for k, v in updates.items() if k != 'hours_completed'}
+            supabase_client.table('volunteers').update(clean_updates).eq('roll_no', roll_no).execute()
         except Exception as e:
             print(f"Supabase update_volunteer error: {e}")
 
