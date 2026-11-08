@@ -234,7 +234,7 @@ button.btn { font-family: inherit; }
 .hero {
   min-height: 94vh;
   background-color: #141518;
-  background-image: linear-gradient(135deg, rgba(18, 19, 22, 0.85) 0%, rgba(18, 19, 22, 0.72) 45%, rgba(18, 19, 22, 0.88) 100%), url('../images/mvgr_campus_statue.png');
+  background-image: linear-gradient(135deg, rgba(18, 19, 22, 0.82) 0%, rgba(18, 19, 22, 0.68) 45%, rgba(18, 19, 22, 0.85) 100%), url('../images/mvgr_college_of_engineering_autonomous_cover.jpeg');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
