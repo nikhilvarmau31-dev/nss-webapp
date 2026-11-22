@@ -16,7 +16,7 @@
             </div>
         </div>
 
-        <div class="login-elevated-card" style="max-width: 460px; margin: 0 auto;">
+        <div class="login-elevated-card" style="max-width: 480px; margin: 0 auto;">
             <div class="card-headings" style="text-align: center;">
                 <div style="width: 56px; height: 56px; margin: 0 auto 14px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #e5e1d7;">
                     <svg width="28" height="28" viewBox="0 0 18 18">
@@ -35,10 +35,27 @@
                 </div>
             </div>
 
-            <form method="POST" action="{{ url_for('google_login') }}" style="margin-top: 20px;">
+            <!-- 1-Click Firebase Google Sign-In Popup Button -->
+            <div style="margin-top: 24px;">
+                <button type="button" class="btn-google-signin" onclick="signInWithFirebaseGoogle()" style="height: 50px; font-size: 14.5px; border-color: #4285f4; box-shadow: 0 2px 6px rgba(66,133,244,0.18);">
+                    <svg class="google-icon" width="20" height="20" viewBox="0 0 18 18">
+                        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
+                        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+                        <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.59.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.347 2.825.957 4.039l3.007-2.332z"/>
+                        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+                    </svg>
+                    <strong>1-Click Sign In with Google Popup</strong>
+                </button>
+            </div>
+
+            <div class="oauth-divider" style="margin: 20px 0 16px;">
+                <span>or enter institutional email</span>
+            </div>
+
+            <form method="POST" action="{{ url_for('google_login') }}">
                 <div class="modern-input-group">
                     <span class="input-icon"><i class="far fa-envelope"></i></span>
-                    <input type="email" name="email" class="modern-input" placeholder="e.g. 24331a42c3@mvgrce.edu.in" required autofocus pattern=".+@mvgrce\.edu\.in$" title="Please use your @mvgrce.edu.in institutional email">
+                    <input type="email" name="email" class="modern-input" placeholder="e.g. 24331a42c3@mvgrce.edu.in" required pattern=".+@mvgrce\.edu\.in$" title="Please use your @mvgrce.edu.in institutional email">
                 </div>
                 <div class="modern-input-group">
                     <span class="input-icon"><i class="far fa-user"></i></span>
@@ -64,4 +81,99 @@
         </div>
     </div>
 </div>
+
+<!-- Firebase App and Auth SDK for One-Click Google Login -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+    apiKey: "{{ firebase_config.apiKey }}",
+    authDomain: "{{ firebase_config.authDomain }}",
+    projectId: "{{ firebase_config.projectId }}",
+    appId: "{{ firebase_config.appId }}"
+};
+
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+    try {
+        firebase.initializeApp(firebaseConfig);
+    } catch (e) {
+        console.warn('Firebase init warning:', e);
+    }
+}
+
+function signInWithFirebaseGoogle() {
+    if (typeof firebase === 'undefined' || !firebase.auth) {
+        return;
+    }
+
+    const btns = document.querySelectorAll('.btn-google-signin');
+    const originalHTMLs = [];
+    btns.forEach((b, i) => {
+        originalHTMLs[i] = b.innerHTML;
+        b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting to Google...';
+        b.style.pointerEvents = 'none';
+    });
+
+    function restoreButtons() {
+        btns.forEach((b, i) => {
+            b.innerHTML = originalHTMLs[i];
+            b.style.pointerEvents = 'auto';
+        });
+    }
+
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({
+        hd: 'mvgrce.edu.in',
+        prompt: 'select_account'
+    });
+
+    firebase.auth().signInWithPopup(provider)
+        .then(async (result) => {
+            const user = result.user;
+            const email = (user.email || '').toLowerCase().trim();
+
+            if (!email.endsWith('@mvgrce.edu.in')) {
+                await firebase.auth().signOut();
+                alert('Access Denied: Only institutional Google accounts ending with @mvgrce.edu.in are permitted.\n\nYou selected: ' + email);
+                restoreButtons();
+                return;
+            }
+
+            const idToken = await user.getIdToken();
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{{ url_for('google_login') }}";
+
+            const inputToken = document.createElement('input');
+            inputToken.type = 'hidden';
+            inputToken.name = 'credential';
+            inputToken.value = idToken;
+            form.appendChild(inputToken);
+
+            const inputEmail = document.createElement('input');
+            inputEmail.type = 'hidden';
+            inputEmail.name = 'email';
+            inputEmail.value = email;
+            form.appendChild(inputEmail);
+
+            const inputName = document.createElement('input');
+            inputName.type = 'hidden';
+            inputName.name = 'name';
+            inputName.value = user.displayName || '';
+            form.appendChild(inputName);
+
+            document.body.appendChild(form);
+            form.submit();
+        })
+        .catch((error) => {
+            console.error('Firebase Auth error:', error);
+            restoreButtons();
+            if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+                alert('Google Sign-In notice: ' + (error.message || error.code));
+            }
+        });
+}
+</script>
 {% endblock %}

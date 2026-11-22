@@ -1503,6 +1503,14 @@ def contact():
 
 # ─── Authentication & Portal Routes ──────────────────────────────────────────
 
+FIREBASE_WEB_CONFIG = {
+    'apiKey': os.environ.get('FIREBASE_API_KEY', 'AIzaSyDvchCpexlWG_LbF3dahi8mPJe-PtYKTUs'),
+    'authDomain': os.environ.get('FIREBASE_AUTH_DOMAIN', 'nss-webapp.firebaseapp.com'),
+    'projectId': os.environ.get('FIREBASE_PROJECT_ID', 'nss-webapp'),
+    'appId': os.environ.get('FIREBASE_APP_ID', '1:651381354984:web:f2c924108f796258a2745d')
+}
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     tab = request.args.get('tab', 'student')
@@ -1718,7 +1726,7 @@ def login():
                 return redirect(next_url)
             return redirect(url_for('student_dashboard'))
             
-    return render_template('login.html', active_tab=tab, google_client_id=os.environ.get('GOOGLE_CLIENT_ID', '').strip())
+    return render_template('login.html', active_tab=tab, google_client_id=os.environ.get('GOOGLE_CLIENT_ID', '').strip(), firebase_config=FIREBASE_WEB_CONFIG)
 
 
 def process_google_authenticated_user(email, name=''):
@@ -1853,18 +1861,24 @@ def google_login():
         credential = request.form.get('credential', '').strip()
 
         if credential:
+            # 1. Try Firebase Admin verification
             try:
-                import requests
-                resp = requests.get(f'https://oauth2.googleapis.com/tokeninfo?id_token={credential}', timeout=8)
-                if resp.status_code == 200:
-                    info = resp.json()
-                    email = info.get('email', '').strip().lower()
-                    name = info.get('name', '') or name
-                else:
-                    flash('Google authentication token could not be verified.', 'danger')
-                    return redirect(url_for('login'))
+                from firebase_admin import auth as fb_auth
+                decoded = fb_auth.verify_id_token(credential)
+                email = decoded.get('email', '').strip().lower()
+                name = decoded.get('name', '') or name
             except Exception as e:
-                print(f"Token verification error: {e}")
+                print(f"Firebase token verification failed, checking tokeninfo: {e}")
+                # 2. Fallback to Google OAuth tokeninfo
+                try:
+                    import requests
+                    resp = requests.get(f'https://oauth2.googleapis.com/tokeninfo?id_token={credential}', timeout=8)
+                    if resp.status_code == 200:
+                        info = resp.json()
+                        email = info.get('email', '').strip().lower()
+                        name = info.get('name', '') or name
+                except Exception as e2:
+                    print(f"Tokeninfo fallback error: {e2}")
 
         if not email:
             flash('Please provide your @mvgrce.edu.in institutional email.', 'warning')
@@ -1889,8 +1903,8 @@ def google_login():
         )
         return redirect(auth_url)
 
-    # Otherwise render the institutional Google sign-in interface
-    return render_template('google_login.html')
+    # Otherwise render the institutional Google sign-in interface with Firebase Auth
+    return render_template('google_login.html', firebase_config=FIREBASE_WEB_CONFIG)
 
 
 @app.route('/login/google/callback', methods=['GET', 'POST'])
