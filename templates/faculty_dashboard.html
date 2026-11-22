@@ -382,7 +382,7 @@
                                 </div>
                             </div>
 
-                            <div class="dashboard-form-grid mb-2">
+                            <div class="dashboard-form-grid mb-2" style="grid-template-columns: 2fr 1fr 1fr;">
                                 <div class="form-input-box">
                                     <label><i class="fas fa-calendar-alt"></i> Select Event / Drive *</label>
                                     <select name="event_id" class="form-control" required onchange="updateAttendanceHours(this)">
@@ -392,8 +392,14 @@
                                     </select>
                                 </div>
                                 <div class="form-input-box">
-                                    <label><i class="fas fa-clock"></i> Selected Event Base Hours</label>
+                                    <label><i class="fas fa-clock"></i> Base Hours</label>
                                     <input type="text" id="eventHoursDisplay" value="{{ events[0].hours if events else 4 }} Hours" readonly style="background:#f8f9fa; font-weight:600;">
+                                </div>
+                                <div class="form-input-box">
+                                    <label><i class="fas fa-file-pdf"></i> Extract Roster</label>
+                                    <a id="downloadAttendanceEventPdfBtn" href="{{ url_for('export_event_volunteers_pdf', event_id=events[0].id) if events else '#' }}" class="btn-table-action view" style="display:inline-flex; align-items:center; justify-content:center; gap:6px; background:#fdf6e7; color:#af8d44; height:42px; border-radius:6px; font-weight:600; text-decoration:none; width:100%; border:1px solid #ebd9b0;" target="_blank">
+                                        <i class="fas fa-file-pdf"></i> Download PDF
+                                    </a>
                                 </div>
                             </div>
 
@@ -558,6 +564,9 @@
                                     <td><span class="status-verified-pill" style="{% if ev.status == 'upcoming' %}background:#fef7e0; color:#b78103;{% endif %}">{{ ev.status|capitalize }}</span></td>
                                     <td>
                                         <div class="table-action-group">
+                                            <a href="{{ url_for('export_event_volunteers_pdf', event_id=ev.id) }}" class="btn-table-action view" style="background:#fdf6e7; color:#af8d44; text-decoration:none;" title="Download Registered Volunteers (PDF)" target="_blank">
+                                                <i class="fas fa-file-pdf"></i> Volunteers PDF
+                                            </a>
                                             <button type="button" class="btn-table-action edit" onclick='openEditEventModal({{ ev|tojson }})'>
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
@@ -971,6 +980,10 @@ function updateAttendanceHours(select) {
     if (badge) badge.textContent = hours;
     const inp = document.getElementById('facultyHoursInput');
     if (inp) inp.value = hours;
+    const pdfBtn = document.getElementById('downloadAttendanceEventPdfBtn');
+    if (pdfBtn && select.value) {
+        pdfBtn.href = '/events/' + select.value + '/export-pdf';
+    }
 }
 
 // Edit Drive Modal Handlers

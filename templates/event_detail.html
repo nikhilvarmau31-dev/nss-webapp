@@ -104,12 +104,15 @@
                     <h4><i class="fas fa-users"></i> Registered Volunteers</h4>
                     {% if event.registered_volunteers %}
                     <div class="volunteer-count-badge">{{ event.registered_volunteers | length }} registered</div>
-                    {% if session.get('admin') %}
+                    {% if session.get('admin') or session.get('faculty') %}
                     <ul class="volunteer-list">
                         {% for roll in event.registered_volunteers %}
                         <li><i class="fas fa-user-check"></i> {{ roll }}</li>
                         {% endfor %}
                     </ul>
+                    <a href="{{ url_for('export_event_volunteers_pdf', event_id=event.id) }}" class="btn-table-action view" style="display:inline-flex; align-items:center; justify-content:center; gap:6px; background:#fdf6e7; color:#af8d44; padding:8px 14px; border-radius:6px; font-weight:600; text-decoration:none; width:100%; margin-top:10px; border:1px solid #ebd9b0;" target="_blank">
+                        <i class="fas fa-file-pdf"></i> Download Volunteers PDF
+                    </a>
                     {% endif %}
                     {% else %}
                     <p class="empty-text">No volunteers registered yet.</p>

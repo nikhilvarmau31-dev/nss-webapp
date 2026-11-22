@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, abort, send_file
 from datetime import datetime, timedelta
 import json
 import os
@@ -766,6 +766,299 @@ def event_detail(event_id):
     clean_roll = session.get('student', '').strip().upper() if session.get('student') else ''
     is_registered = bool(clean_roll and any(r.strip().upper() == clean_roll for r in event.get('registered_volunteers', [])))
     return render_template('event_detail.html', event=event, is_registered=is_registered)
+
+
+def generate_event_volunteers_pdf(event, registered_volunteer_details, faculty_name="NSS Faculty Coordinator"):
+    import io
+    from reportlab.lib.pagesizes import A4
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable, Image
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=36,
+        leftMargin=36,
+        topMargin=32,
+        bottomMargin=32
+    )
+
+    styles = getSampleStyleSheet()
+
+    GOLD = colors.HexColor('#af8d44')
+    DARK = colors.HexColor('#18191c')
+    LIGHT_BG = colors.HexColor('#fcfaf6')
+    BORDER_COLOR = colors.HexColor('#e0dbcf')
+
+    title_style = ParagraphStyle(
+        'InstTitle',
+        fontName='Helvetica-Bold',
+        fontSize=13.5,
+        leading=16.5,
+        alignment=1,
+        textColor=DARK
+    )
+    subtitle_style = ParagraphStyle(
+        'InstSubTitle',
+        fontName='Helvetica-Bold',
+        fontSize=11,
+        leading=14,
+        alignment=1,
+        textColor=GOLD
+    )
+    tagline_style = ParagraphStyle(
+        'InstTagline',
+        fontName='Helvetica-Oblique',
+        fontSize=7.5,
+        leading=10,
+        alignment=1,
+        textColor=colors.HexColor('#555555')
+    )
+    event_heading_style = ParagraphStyle(
+        'EventHeading',
+        fontName='Helvetica-Bold',
+        fontSize=12,
+        leading=15,
+        textColor=DARK
+    )
+    meta_label_style = ParagraphStyle(
+        'MetaLabel',
+        fontName='Helvetica-Bold',
+        fontSize=8,
+        leading=10.5,
+        textColor=DARK
+    )
+    meta_val_style = ParagraphStyle(
+        'MetaVal',
+        fontName='Helvetica',
+        fontSize=8,
+        leading=10.5,
+        textColor=colors.HexColor('#222222')
+    )
+    th_style = ParagraphStyle(
+        'TH',
+        fontName='Helvetica-Bold',
+        fontSize=8,
+        leading=10,
+        alignment=1,
+        textColor=colors.white
+    )
+    td_style = ParagraphStyle(
+        'TD',
+        fontName='Helvetica',
+        fontSize=7.5,
+        leading=9.5,
+        textColor=DARK
+    )
+    td_bold_style = ParagraphStyle(
+        'TDBold',
+        fontName='Helvetica-Bold',
+        fontSize=7.5,
+        leading=9.5,
+        textColor=DARK
+    )
+
+    story = []
+
+    # Header with Logo
+    logo_path = os.path.join(BASE_DIR, 'static', 'images', 'mvgr_logo.png')
+    header_text = [
+        Paragraph("MAHARAJ VIJAYARAM GAJAPATHI RAJ COLLEGE OF ENGINEERING (AUTONOMOUS)", title_style),
+        Spacer(1, 2),
+        Paragraph("NATIONAL SERVICE SCHEME (NSS UNIT)", subtitle_style),
+        Spacer(1, 2),
+        Paragraph("Not Me But You &bull; Approved by JNTU-GV & Govt. of AP &bull; Vizianagaram - 535005", tagline_style),
+    ]
+
+    if os.path.exists(logo_path):
+        try:
+            logo_img = Image(logo_path, width=44, height=44)
+            header_table = Table([[logo_img, header_text]], colWidths=[52, 471])
+            header_table.setStyle(TableStyle([
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+                ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+                ('TOPPADDING', (0, 0), (-1, -1), 0),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+            ]))
+            story.append(header_table)
+        except Exception:
+            story.extend(header_text)
+    else:
+        story.extend(header_text)
+
+    story.append(Spacer(1, 6))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=GOLD, spaceAfter=8))
+
+    # Event Details Section
+    story.append(Paragraph(f"Registered Volunteers Roster: {event.get('title', 'NSS Drive')}", event_heading_style))
+    story.append(Spacer(1, 5))
+
+    meta_data = [
+        [
+            Paragraph("<b>Category:</b>", meta_label_style), Paragraph(str(event.get('category', 'General')), meta_val_style),
+            Paragraph("<b>Date & Time:</b>", meta_label_style), Paragraph(f"{event.get('date', '')} • {event.get('time', '')}", meta_val_style)
+        ],
+        [
+            Paragraph("<b>Venue:</b>", meta_label_style), Paragraph(str(event.get('venue', 'MVGR Campus')), meta_val_style),
+            Paragraph("<b>Service Hours:</b>", meta_label_style), Paragraph(f"{event.get('hours', 0)} Hours Credit", meta_val_style)
+        ],
+        [
+            Paragraph("<b>Enrolled:</b>", meta_label_style), Paragraph(f"{len(registered_volunteer_details)} / {event.get('max_volunteers', 50)} Volunteers", meta_val_style),
+            Paragraph("<b>Generated:</b>", meta_label_style), Paragraph(datetime.now().strftime('%d %b %Y, %I:%M %p'), meta_val_style)
+        ],
+        [
+            Paragraph("<b>Coordinator:</b>", meta_label_style), Paragraph(str(faculty_name), meta_val_style),
+            Paragraph("<b>Event Status:</b>", meta_label_style), Paragraph(str(event.get('status', 'upcoming')).capitalize(), meta_val_style)
+        ]
+    ]
+    meta_table = Table(meta_data, colWidths=[80, 182, 82, 179])
+    meta_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), LIGHT_BG),
+        ('BOX', (0, 0), (-1, -1), 0.75, BORDER_COLOR),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#f0ece1')),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('LEFTPADDING', (0, 0), (-1, -1), 5),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+    ]))
+    story.append(meta_table)
+    story.append(Spacer(1, 9))
+
+    # Volunteers Table
+    headers = [
+        Paragraph("S.No", th_style),
+        Paragraph("Roll Number", th_style),
+        Paragraph("Volunteer Name", th_style),
+        Paragraph("Branch & Year", th_style),
+        Paragraph("Contact / Email", th_style),
+        Paragraph("Attendance / Signature", th_style)
+    ]
+    table_data = [headers]
+
+    for idx, vol in enumerate(registered_volunteer_details, start=1):
+        roll_no = vol.get('roll_no', '')
+        name = vol.get('name', 'N/A')
+        branch_year = f"{vol.get('branch', 'CSE')} ({vol.get('year', '')})"
+        contact = vol.get('phone') or vol.get('email', '')
+        table_data.append([
+            Paragraph(str(idx), td_style),
+            Paragraph(str(roll_no), td_bold_style),
+            Paragraph(str(name), td_style),
+            Paragraph(branch_year, td_style),
+            Paragraph(str(contact), td_style),
+            Paragraph("[  ] Present &nbsp;&nbsp; ________________", td_style)
+        ])
+
+    if len(registered_volunteer_details) == 0:
+        table_data.append([
+            Paragraph("-", td_style),
+            Paragraph("No volunteers currently registered for this drive.", td_style),
+            Paragraph("", td_style),
+            Paragraph("", td_style),
+            Paragraph("", td_style),
+            Paragraph("", td_style)
+        ])
+
+    vol_table = Table(table_data, colWidths=[28, 85, 125, 80, 110, 95])
+    vol_table_style = [
+        ('BACKGROUND', (0, 0), (-1, 0), DARK),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 4),
+        ('TOPPADDING', (0, 0), (-1, 0), 4),
+        ('BOX', (0, 0), (-1, -1), 1, BORDER_COLOR),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+        ('TOPPADDING', (0, 1), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+    ]
+    for r in range(1, len(table_data)):
+        if r % 2 == 0:
+            vol_table_style.append(('BACKGROUND', (0, r), (-1, r), colors.HexColor('#faf8f5')))
+
+    vol_table.setStyle(TableStyle(vol_table_style))
+    story.append(vol_table)
+    story.append(Spacer(1, 20))
+
+    # Signatures footer
+    sign_table_data = [
+        [
+            Paragraph("<b>Verified By:</b><br/>NSS Student Lead<br/>MVGR College of Engineering", td_style),
+            Paragraph("<b>Approved By:</b><br/>" + str(faculty_name) + "<br/>NSS Faculty Coordinator", td_style),
+            Paragraph("<b>Attested By:</b><br/>NSS Program Officer / Principal<br/>MVGR College of Engineering (A)", td_style),
+        ]
+    ]
+    sign_table = Table(sign_table_data, colWidths=[174, 175, 174])
+    sign_table.setStyle(TableStyle([
+        ('LINEABOVE', (0, 0), (-1, 0), 0.5, BORDER_COLOR),
+        ('TOPPADDING', (0, 0), (-1, -1), 22),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+    ]))
+    story.append(sign_table)
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
+@app.route('/events/<int:event_id>/export-pdf')
+@app.route('/faculty/events/<int:event_id>/export-pdf')
+def export_event_volunteers_pdf(event_id):
+    if not session.get('faculty') and not session.get('admin'):
+        flash('Faculty coordinator or Admin login required to extract volunteer rosters.', 'warning')
+        return redirect(url_for('login', tab='faculty'))
+
+    current_events = get_current_events()
+    event = next((e for e in current_events if e['id'] == event_id), None)
+    if not event:
+        flash('Event not found.', 'danger')
+        return redirect(url_for('faculty_dashboard') + '#events')
+
+    registered_rolls = event.get('registered_volunteers') or []
+
+    # Retrieve full details for registered volunteers
+    all_vols = list(volunteers)
+    if db.is_connected():
+        fresh_vols = db.fetch_volunteers([])
+        if fresh_vols:
+            all_vols = fresh_vols
+
+    registered_details = []
+    for roll in registered_rolls:
+        clean_roll = str(roll).strip().upper()
+        vol = next((v for v in all_vols if v.get('roll_no', '').strip().upper() == clean_roll), None)
+        if not vol and db.is_connected():
+            vol = db.get_volunteer_by_roll_no(clean_roll)
+
+        if vol:
+            registered_details.append(vol)
+        else:
+            registered_details.append({
+                'roll_no': clean_roll,
+                'name': 'Enrolled Volunteer',
+                'branch': 'CSE',
+                'year': 'N/A',
+                'email': f'{clean_roll.lower()}@mvgrce.edu.in',
+                'phone': ''
+            })
+
+    fac_name = session.get('faculty_name', 'Dr. S. Rao' if session.get('faculty') else 'Admin Officer')
+    pdf_buffer = generate_event_volunteers_pdf(event, registered_details, faculty_name=fac_name)
+
+    safe_title = re.sub(r'[^a-zA-Z0-9_\-]', '_', event.get('title', 'Event')).strip('_')[:35]
+    filename = f"NSS_MVGR_{safe_title}_Volunteers.pdf"
+
+    return send_file(
+        pdf_buffer,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/pdf'
+    )
 
 
 @app.route('/events/<int:event_id>/register', methods=['POST'])
