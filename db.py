@@ -76,7 +76,7 @@ def fetch_volunteers(fallback_list):
                 data['hours_completed'] = data.get('hours', data.get('hours_completed', 0))
                 data['hours'] = data.get('hours_completed', 0)
                 result.append(data)
-        return result if result else fallback_list
+        return result
     except Exception as e:
         print(f"Firebase fetch_volunteers error: {e}")
         return fallback_list
@@ -162,7 +162,7 @@ def fetch_faculty(fallback_list):
     try:
         docs = db.collection('faculty_members').order_by('id').stream()
         result = [doc.to_dict() for doc in docs if doc.to_dict()]
-        return result if result else fallback_list
+        return result
     except Exception as e:
         print(f"Firebase fetch_faculty error: {e}")
         return fallback_list
@@ -322,7 +322,7 @@ def fetch_audit_logs(fallback_list):
         result = [doc.to_dict() for doc in docs if doc.to_dict()]
         # Sort descending by id in Python to avoid Firestore composite index requirement
         result.sort(key=lambda x: x.get('id', 0), reverse=True)
-        return result if result else fallback_list
+        return result
     except Exception as e:
         print(f"Firebase fetch_audit_logs error: {e}")
         return fallback_list
