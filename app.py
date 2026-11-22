@@ -791,7 +791,7 @@ def register_for_event(event_id):
         flash('Volunteer record not found. Please log in again.', 'danger')
         return redirect(url_for('login', tab='student', next=url_for('event_detail', event_id=event_id)))
 
-    # Fetch fresh events directly from Supabase for real-time accurate volunteer count
+    # Fetch fresh events directly from Firebase Firestore for real-time accurate volunteer count
     current_events = get_current_events()
     event = next((e for e in current_events if e['id'] == event_id), None)
     if not event:
@@ -1097,7 +1097,7 @@ def send_contact_email_notification(name, sender_email, subject, message_body):
     smtp_password = os.environ.get('SMTP_PASSWORD', '').strip()
 
     if not smtp_password:
-        print(f"ℹ️ SMTP_PASSWORD not set in environment. Notification for {recipient} saved to Supabase.")
+        print(f"ℹ️ SMTP_PASSWORD not set in environment. Notification for {recipient} saved to Firebase Firestore.")
         return False, "SMTP credentials not configured"
 
     try:
@@ -1320,7 +1320,7 @@ def login():
             password = request.form.get('password', '').strip()
             next_url = request.args.get('next') or request.form.get('next')
             
-            # Query directly from Supabase first for real-time freshness across instances
+            # Query directly from Firebase Firestore first for real-time freshness across instances
             vol = db.get_volunteer_by_roll_no(roll_no)
             if vol:
                 for idx, v in enumerate(volunteers):
