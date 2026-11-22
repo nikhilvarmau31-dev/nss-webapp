@@ -1425,12 +1425,250 @@ def login():
                 return redirect(next_url)
             return redirect(url_for('student_dashboard'))
             
-    return render_template('login.html', active_tab=tab)
+    return render_template('login.html', active_tab=tab, google_client_id=os.environ.get('GOOGLE_CLIENT_ID', '').strip())
+
+
+def process_google_authenticated_user(email, name=''):
+    clean_email = (email or '').strip().lower()
+
+    # ── STRICT DOMAIN RESTRICTION: must end with @mvgrce.edu.in ──
+    if not clean_email.endswith('@mvgrce.edu.in'):
+        flash(f'Access Denied: Only institutional Google accounts ending with @mvgrce.edu.in are permitted. You attempted to sign in with "{clean_email}".', 'danger')
+        return redirect(url_for('login'))
+
+    prefix = clean_email.split('@')[0].strip()
+    clean_roll = prefix.upper()
+
+    # 1. Check Faculty Members First
+    fac = next((f for f in faculty_members if f.get('email', '').strip().lower() == clean_email), None)
+    if not fac:
+        fac = next((f for f in faculty_members if f.get('username', '').strip().lower() == prefix.lower() or f.get('faculty_id', '').strip().upper() == clean_roll), None)
+    if not fac and db.is_connected():
+        fac = db.get_faculty_by_email(clean_email)
+        if fac:
+            for idx, existing in enumerate(faculty_members):
+                if existing.get('faculty_id') == fac.get('faculty_id'):
+                    faculty_members[idx] = fac
+                    break
+            else:
+                faculty_members.append(fac)
+
+    if fac:
+        session['faculty'] = True
+        session['admin'] = True  # Operational admin access
+        session['faculty_id'] = fac['faculty_id']
+        session['faculty_name'] = fac['name']
+        session['faculty_dept'] = fac['department']
+        session['user_email'] = fac['email']
+        session.pop('student', None)
+        session.pop('super_admin', None)
+        flash(f'Welcome back, {fac["name"]}! Successfully authenticated via Google ({clean_email}).', 'success')
+        return redirect(url_for('faculty_dashboard'))
+
+    # 2. Check Volunteers / Students
+    vol = next((v for v in volunteers if v.get('email', '').strip().lower() == clean_email), None)
+    if not vol:
+        vol = next((v for v in volunteers if v.get('roll_no', '').strip().upper() == clean_roll), None)
+    if not vol:
+        vol = next((v for v in volunteers if v.get('email', '').lower().startswith(prefix.lower())), None)
+    if not vol and db.is_connected():
+        vol = db.get_volunteer_by_email(clean_email)
+        if not vol:
+            vol = db.get_volunteer_by_roll_no(clean_roll)
+        if vol:
+            for idx, existing in enumerate(volunteers):
+                if existing.get('roll_no', '').upper() == vol.get('roll_no', '').upper():
+                    volunteers[idx] = vol
+                    break
+            else:
+                volunteers.append(vol)
+
+    if vol:
+        if not vol.get('email') or vol.get('email') != clean_email:
+            vol['email'] = clean_email
+            if db.is_connected():
+                db.update_volunteer_record(vol['roll_no'], {'email': clean_email})
+        session['student'] = vol['roll_no']
+        session['student_name'] = vol['name']
+        session['user_email'] = clean_email
+        session.pop('admin', None)
+        session.pop('super_admin', None)
+        session.pop('faculty', None)
+        flash(f'Welcome back, {vol["name"]}! Logged in via Google ({clean_email}).', 'success')
+        return redirect(url_for('student_dashboard'))
+
+    # 3. New User with @mvgrce.edu.in: Auto-Provision Volunteer Account
+    branch = 'CSE'
+    year = '1st Year'
+    inferred_roll = clean_roll
+    display_name = name.strip() if name and name.strip() else prefix.replace('.', ' ').title()
+
+    # Branch mapping from standard MVGR roll number format
+    branch_map = {
+        '05': 'CSE', '04': 'ECE', '02': 'EEE', '03': 'MECH',
+        '01': 'CIVIL', '08': 'CHEM', '12': 'IE&CT', '54': 'DE',
+        '42': 'CSE', '44': 'CSE', '45': 'CSE'
+    }
+    if len(clean_roll) >= 8:
+        code = clean_roll[6:8] if len(clean_roll) == 10 and clean_roll[5].isalpha() else clean_roll[4:6]
+        if code in branch_map:
+            branch = branch_map[code]
+
+    if len(clean_roll) >= 2 and clean_roll[:2].isdigit():
+        join_yr = int(clean_roll[:2])
+        curr_yr = datetime.now().year % 100
+        diff = max(1, min(4, curr_yr - join_yr + 1))
+        year_names = {1: '1st Year', 2: '2nd Year', 3: '3rd Year', 4: '4th Year'}
+        year = year_names.get(diff, '1st Year')
+
+    new_vol = {
+        'id': get_next_id(volunteers),
+        'name': display_name,
+        'roll_no': inferred_roll,
+        'email': clean_email,
+        'phone': '',
+        'password': 'google_authenticated',
+        'branch': branch,
+        'year': year,
+        'blood_group': 'O+',
+        'address': 'MVGR Campus, Vizianagaram',
+        'joined_date': datetime.now().strftime('%Y-%m-%d'),
+        'hours': 0,
+        'hours_completed': 0,
+        'status': 'active'
+    }
+    saved = db.insert_volunteer(new_vol)
+    if saved and isinstance(saved, dict):
+        new_vol['id'] = saved.get('id', new_vol['id'])
+    volunteers.append(new_vol)
+
+    session['student'] = new_vol['roll_no']
+    session['student_name'] = new_vol['name']
+    session['user_email'] = clean_email
+    session.pop('admin', None)
+    session.pop('super_admin', None)
+    session.pop('faculty', None)
+    flash(f'Welcome to NSS MVGR, {new_vol["name"]}! Your volunteer account ({new_vol["roll_no"]}) is now registered and signed in via Google.', 'success')
+    return redirect(url_for('student_dashboard'))
 
 
 @app.route('/login/google', methods=['GET', 'POST'])
 def google_login():
-    return redirect(url_for('login'))
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        name = request.form.get('name', '').strip()
+        credential = request.form.get('credential', '').strip()
+
+        if credential:
+            try:
+                import requests
+                resp = requests.get(f'https://oauth2.googleapis.com/tokeninfo?id_token={credential}', timeout=8)
+                if resp.status_code == 200:
+                    info = resp.json()
+                    email = info.get('email', '').strip().lower()
+                    name = info.get('name', '') or name
+                else:
+                    flash('Google authentication token could not be verified.', 'danger')
+                    return redirect(url_for('login'))
+            except Exception as e:
+                print(f"Token verification error: {e}")
+
+        if not email:
+            flash('Please provide your @mvgrce.edu.in institutional email.', 'warning')
+            return redirect(url_for('login'))
+
+        return process_google_authenticated_user(email, name)
+
+    # GET request: If GOOGLE_CLIENT_ID configured, redirect to live Google OAuth flow
+    google_client_id = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+    if google_client_id:
+        redirect_uri = url_for('google_callback', _external=True)
+        if request.headers.get('X-Forwarded-Proto') == 'https':
+            redirect_uri = redirect_uri.replace('http://', 'https://')
+        auth_url = (
+            f"https://accounts.google.com/o/oauth2/v2/auth?"
+            f"client_id={google_client_id}&"
+            f"redirect_uri={redirect_uri}&"
+            f"response_type=code&"
+            f"scope=openid%20email%20profile&"
+            f"hd=mvgrce.edu.in&"
+            f"prompt=select_account"
+        )
+        return redirect(auth_url)
+
+    # Otherwise render the institutional Google sign-in interface
+    return render_template('google_login.html')
+
+
+@app.route('/login/google/callback', methods=['GET', 'POST'])
+def google_callback():
+    # POST from Google Identity Services
+    if request.method == 'POST':
+        credential = request.form.get('credential')
+        if credential:
+            try:
+                import requests
+                resp = requests.get(f'https://oauth2.googleapis.com/tokeninfo?id_token={credential}', timeout=8)
+                if resp.status_code == 200:
+                    info = resp.json()
+                    return process_google_authenticated_user(info.get('email'), info.get('name', ''))
+            except Exception as e:
+                print(f"Error validating Google ID token: {e}")
+        flash('Invalid Google credential received.', 'danger')
+        return redirect(url_for('login'))
+
+    # GET from OAuth redirect
+    code = request.args.get('code')
+    error = request.args.get('error')
+    if error:
+        flash(f'Google sign-in was cancelled or encountered an error: {error}', 'warning')
+        return redirect(url_for('login'))
+
+    if not code:
+        flash('No authorization code received from Google.', 'warning')
+        return redirect(url_for('login'))
+
+    google_client_id = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+    google_client_secret = os.environ.get('GOOGLE_CLIENT_SECRET', '').strip()
+    redirect_uri = url_for('google_callback', _external=True)
+    if request.headers.get('X-Forwarded-Proto') == 'https':
+        redirect_uri = redirect_uri.replace('http://', 'https://')
+
+    try:
+        import requests
+        token_resp = requests.post(
+            'https://oauth2.googleapis.com/token',
+            data={
+                'code': code,
+                'client_id': google_client_id,
+                'client_secret': google_client_secret,
+                'redirect_uri': redirect_uri,
+                'grant_type': 'authorization_code'
+            },
+            timeout=10
+        )
+        if token_resp.status_code != 200:
+            flash('Failed to exchange Google authorization code for access token.', 'danger')
+            return redirect(url_for('login'))
+
+        token_data = token_resp.json()
+        access_token = token_data.get('access_token')
+
+        userinfo_resp = requests.get(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=10
+        )
+        if userinfo_resp.status_code == 200:
+            user_data = userinfo_resp.json()
+            return process_google_authenticated_user(user_data.get('email'), user_data.get('name', ''))
+        else:
+            flash('Failed to retrieve user profile from Google.', 'danger')
+            return redirect(url_for('login'))
+    except Exception as e:
+        print(f"Google OAuth callback error: {e}")
+        flash(f'Google authentication error: {str(e)}', 'danger')
+        return redirect(url_for('login'))
 
 
 @app.route('/change-password', methods=['POST'])

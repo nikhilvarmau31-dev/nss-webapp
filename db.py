@@ -97,6 +97,22 @@ def get_volunteer_by_roll_no(roll_no):
         print(f"Firebase get_volunteer_by_roll_no error: {e}")
     return None
 
+def get_volunteer_by_email(email):
+    if not is_connected() or not email:
+        return None
+    try:
+        clean_email = email.strip().lower()
+        docs = db.collection('volunteers').where('email', '==', clean_email).limit(1).stream()
+        for doc in docs:
+            v = doc.to_dict()
+            if v:
+                v['hours_completed'] = v.get('hours', v.get('hours_completed', 0))
+                v['hours'] = v.get('hours_completed', 0)
+                return v
+    except Exception as e:
+        print(f"Firebase get_volunteer_by_email error: {e}")
+    return None
+
 def insert_volunteer(volunteer_dict):
     hours = volunteer_dict.get('hours_completed', volunteer_dict.get('hours', 0))
     volunteer_dict['hours_completed'] = hours
@@ -150,6 +166,20 @@ def fetch_faculty(fallback_list):
     except Exception as e:
         print(f"Firebase fetch_faculty error: {e}")
         return fallback_list
+
+def get_faculty_by_email(email):
+    if not is_connected() or not email:
+        return None
+    try:
+        clean_email = email.strip().lower()
+        docs = db.collection('faculty_members').where('email', '==', clean_email).limit(1).stream()
+        for doc in docs:
+            f = doc.to_dict()
+            if f:
+                return f
+    except Exception as e:
+        print(f"Firebase get_faculty_by_email error: {e}")
+    return None
 
 def insert_faculty(faculty_dict):
     if is_connected():
