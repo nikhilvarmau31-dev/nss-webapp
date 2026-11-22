@@ -985,15 +985,14 @@ def generate_event_volunteers_pdf(event, registered_volunteer_details, faculty_n
     story.append(vol_table)
     story.append(Spacer(1, 20))
 
-    # Signatures footer
+    # Signatures footer (NSS Faculty Coordinator and NSS Program Officer / Principal)
     sign_table_data = [
         [
-            Paragraph("<b>Verified By:</b><br/>NSS Student Lead<br/>MVGR College of Engineering", td_style),
             Paragraph("<b>Approved By:</b><br/>" + str(faculty_name) + "<br/>NSS Faculty Coordinator", td_style),
             Paragraph("<b>Attested By:</b><br/>NSS Program Officer / Principal<br/>MVGR College of Engineering (A)", td_style),
         ]
     ]
-    sign_table = Table(sign_table_data, colWidths=[174, 175, 174])
+    sign_table = Table(sign_table_data, colWidths=[261, 262])
     sign_table.setStyle(TableStyle([
         ('LINEABOVE', (0, 0), (-1, 0), 0.5, BORDER_COLOR),
         ('TOPPADDING', (0, 0), (-1, -1), 22),
